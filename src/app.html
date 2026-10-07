@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>GB Post</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="../assets/icon.png" alt="">
+      <span>GB Post</span>
+    </div>
+    <nav class="nav">
+      <button data-view="notes"><span class="ico">📝</span>Post-its<span class="count" id="count-notes"></span></button>
+      <div class="nav-title">Rappels</div>
+      <button data-view="alarm"><span class="ico">⏰</span>Alarmes<span class="count" id="count-alarms"></span></button>
+      <button data-view="timer"><span class="ico">⏳</span>Minuteurs<span class="count" id="count-timers"></span></button>
+      <button data-view="stopwatch"><span class="ico">⏱</span>Chrono<span class="count dot" id="count-sw"></span></button>
+      <div class="nav-spacer"></div>
+      <button data-view="settings"><span class="ico">⚙️</span>Réglages</button>
+    </nav>
+    <div class="next" id="next-reminder" hidden>
+      <div class="next-title">Prochain rappel</div>
+      <div class="next-time" id="next-time"></div>
+      <div class="next-label" id="next-label"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- ================= Post-its ================= -->
+    <section class="view" data-view="notes">
+      <header class="view-head">
+        <h1>Post-its</h1>
+        <input id="note-search" type="search" placeholder="Rechercher…" class="search">
+        <div class="head-actions">
+          <button id="notes-show-all" class="ghost" title="Afficher tous les post-its sur le bureau">Tout afficher</button>
+          <button id="notes-hide-all" class="ghost" title="Retirer tous les post-its du bureau">Tout masquer</button>
+          <button id="note-new" class="primary">＋ Nouveau post-it</button>
+        </div>
+      </header>
+      <div class="filters" id="note-filters">
+        <button data-filter="all" class="chip on">Tous</button>
+        <button data-filter="desk" class="chip">Sur le bureau</button>
+        <button data-filter="pinned" class="chip">Épinglés</button>
+        <button data-filter="hidden" class="chip">Masqués</button>
+      </div>
+      <div id="note-grid" class="grid"></div>
+      <div id="notes-empty" class="empty-state" hidden>
+        <img src="../assets/icon.png" alt="">
+        <p>Aucun post-it pour l'instant.</p>
+        <button id="note-new-empty" class="primary">＋ Créer mon premier post-it</button>
+      </div>
+      <p id="notes-noresult" class="empty" hidden>Aucun post-it ne correspond.</p>
+    </section>
+
+    <!-- ================= Alarmes ================= -->
+    <section class="view" data-view="alarm">
+      <header class="view-head"><h1>Alarmes</h1></header>
+      <div class="narrow">
+        <form id="alarm-form" class="card form">
+          <div class="row">
+            <input id="alarm-time" type="time" required class="big-time">
+            <input id="alarm-label" type="text" maxlength="200" placeholder="Tâche à faire…" class="grow">
+          </div>
+          <div class="days" id="alarm-days"></div>
+          <div class="row end">
+            <button type="button" id="alarm-cancel" class="ghost" hidden>Annuler</button>
+            <button type="submit" id="alarm-submit" class="primary">Ajouter l'alarme</button>
+          </div>
+        </form>
+        <ul id="alarm-list" class="list"></ul>
+        <p id="alarm-empty" class="empty">Aucune alarme pour l'instant.</p>
+      </div>
+    </section>
+
+    <!-- ================= Minuteurs ================= -->
+    <section class="view" data-view="timer">
+      <header class="view-head"><h1>Minuteurs</h1></header>
+      <div class="narrow">
+        <form id="timer-form" class="card form">
+          <div class="row duration">
+            <label><input id="timer-h" type="number" min="0" max="99" value="0"><span>h</span></label>
+            <label><input id="timer-m" type="number" min="0" max="59" value="5"><span>min</span></label>
+            <label><input id="timer-s" type="number" min="0" max="59" value="0"><span>s</span></label>
+          </div>
+          <div class="presets" id="timer-presets"></div>
+          <div class="row">
+            <input id="timer-label" type="text" maxlength="200" placeholder="Tâche à faire…" class="grow">
+            <button type="submit" class="primary">Démarrer</button>
+          </div>
+        </form>
+        <ul id="timer-list" class="list"></ul>
+        <p id="timer-empty" class="empty">Aucun minuteur en cours.</p>
+      </div>
+    </section>
+
+    <!-- ================= Chrono ================= -->
+    <section class="view" data-view="stopwatch">
+      <header class="view-head"><h1>Chronomètre</h1></header>
+      <div class="narrow">
+        <div class="card stopwatch">
+          <div id="sw-display" class="sw-display">00:00<small>.00</small></div>
+          <div class="row center">
+            <button id="sw-reset" class="ghost">Réinitialiser</button>
+            <button id="sw-toggle" class="primary">Démarrer</button>
+            <button id="sw-lap" class="ghost">Tour</button>
+          </div>
+        </div>
+        <ol id="sw-laps" class="laps"></ol>
+      </div>
+    </section>
+
+    <!-- ================= Réglages ================= -->
+    <section class="view" data-view="settings">
+      <header class="view-head"><h1>Réglages</h1></header>
+      <div class="narrow">
+        <div class="card setting">
+          <div class="info">
+            <div class="label">Lancer GB Post au démarrage</div>
+            <div class="meta">Tes post-its réapparaissent sur le bureau et tes rappels restent actifs dès l'ouverture de session.</div>
+          </div>
+          <label class="switch"><input id="set-autostart" type="checkbox"><span></span></label>
+        </div>
+        <div class="card setting">
+          <div class="info">
+            <div class="label">Sauvegarde automatique</div>
+            <div class="meta">Chaque changement est enregistré tout de suite dans :</div>
+            <code id="set-datafile" class="path"></code>
+          </div>
+        </div>
+        <p class="about">GB Post <span id="set-version"></span></p>
+      </div>
+    </section>
+  </main>
+
+  <div id="palette-pop" class="palette-pop" hidden></div>
+
+  <script src="app.js"></script>
+  <script src="app-reminders.js"></script>
+  <script src="app-notes.js"></script>
+</body>
+</html>

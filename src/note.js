@@ -295,6 +295,16 @@ colorBtn.addEventListener('click', () => {
 $('#btn-pin').addEventListener('click', togglePinned);
 $('#btn-edit').addEventListener('click', togglePinned);
 $('#btn-delete').addEventListener('click', () => window.gbpost.deleteNote());
+$('#btn-hide').addEventListener('click', () => window.gbpost.hideNote());
+$('#btn-app').addEventListener('click', () => window.gbpost.openApp());
+
+// Modifications faites depuis la fenêtre principale de GB Post.
+window.gbpost.onChanged((updated) => {
+  if (!note) return;
+  if (updated.color && updated.color !== note.color) applyColor(updated.color);
+  note.color = updated.color;
+  if (!!updated.pinned !== !!note.pinned) applyPinned(!!updated.pinned);
+});
 
 window.addEventListener('resize', growAll);
 

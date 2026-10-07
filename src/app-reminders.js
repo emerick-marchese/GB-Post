@@ -1,8 +1,8 @@
-// Fenêtre "Rappels" : alarmes, minuteurs et chronomètre.
+// Fenêtre principale - rappels : alarmes, minuteurs et chronomètre.
 // L'état vit dans le processus principal ; cette fenêtre ne fait que l'afficher.
+// ($, el et pad viennent de app.js.)
 
 const api = window.gbreminders;
-const $ = (sel) => document.querySelector(sel);
 
 // Jours affichés du lundi au dimanche (valeurs JavaScript : 0 = dimanche).
 const DAYS = [[1, 'L', 'Lun'], [2, 'M', 'Mar'], [3, 'M', 'Mer'], [4, 'J', 'Jeu'], [5, 'V', 'Ven'], [6, 'S', 'Sam'], [0, 'D', 'Dim']];
@@ -13,15 +13,7 @@ let clockOffset = 0; // écart entre l'horloge du processus principal et celle-c
 let editingAlarmId = null;
 let selectedDays = new Set();
 
-const pad = (n) => String(n).padStart(2, '0');
 const now = () => Date.now() + clockOffset;
-
-function el(tag, props = {}, ...children) {
-  const e = document.createElement(tag);
-  Object.assign(e, props);
-  e.append(...children);
-  return e;
-}
 
 function formatDuration(ms, withHours = false) {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -56,18 +48,29 @@ function setState(s) {
   renderAlarms();
   renderTimers();
   renderStopwatch();
+  renderSidebar();
 }
 
-// ---------- Onglets ----------
+// Compteurs du menu latéral et prochain rappel.
+function renderSidebar() {
+  const active = state.alarms.filter((a) => a.enabled).length;
+  $('#count-alarms').textContent = active || '';
+  $('#count-timers').textContent = state.timers.length || '';
+  $('#count-sw').classList.toggle('on', !!state.stopwatch.running);
 
-function showTab(tab) {
-  for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('active', b.dataset.tab === tab);
-  for (const p of document.querySelectorAll('.panel')) p.classList.toggle('active', p.dataset.panel === tab);
-  try { localStorage.setItem('tab', tab); } catch (_) {}
-  if (tab === 'alarm') $('#alarm-time').focus();
+  const upcoming = [
+    ...state.alarms.filter((a) => a.enabled && a.nextAt).map((a) => ({ at: a.nextAt, label: a.label || 'Alarme' })),
+    ...state.timers.filter((t) => t.running).map((t) => ({ at: t.endsAt, label: t.label || 'Minuteur' })),
+  ].sort((a, b) => a.at - b.at)[0];
+  $('#next-reminder').hidden = !upcoming;
+  if (upcoming) {
+    const d = new Date(upcoming.at);
+    const today = new Date().toDateString() === d.toDateString();
+    const day = today ? '' : `${d.toLocaleDateString('fr-FR', { weekday: 'short' })} `;
+    $('#next-time').textContent = `${day}${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    $('#next-label').textContent = upcoming.label;
+  }
 }
-
-for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => showTab(b.dataset.tab));
 
 // ---------- Alarmes ----------
 
@@ -271,16 +274,12 @@ function loop() {
   updateStopwatch();
   requestAnimationFrame(loop);
 }
-setInterval(updateAlarmMeta, 15000);
+setInterval(() => { updateAlarmMeta(); renderSidebar(); }, 15000);
 
 api.onState(setState);
-api.onTab(showTab);
 
-(async () => {
+async function initReminders() {
   resetAlarmForm();
   setState(await api.getState());
-  let tab = new URLSearchParams(location.search).get('tab');
-  if (!tab) { try { tab = localStorage.getItem('tab'); } catch (_) {} }
-  showTab(['alarm', 'timer', 'stopwatch'].includes(tab) ? tab : 'alarm');
   requestAnimationFrame(loop);
-})();
+}

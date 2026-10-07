@@ -1,5 +1,5 @@
 // Rappels : alarmes, minuteurs et chronomètre, gérés par le processus principal
-// pour continuer à tourner même quand la fenêtre "Rappels" est fermée.
+// pour continuer à tourner même quand la fenêtre de GB Post est fermée.
 // Quand c'est l'heure, une alerte animée (sans son) s'affiche au centre de l'écran.
 const { BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
@@ -12,7 +12,7 @@ const MAX_LATE_MS = 12 * 60 * 60 * 1000;
 const POPUP_SIZE = { width: 480, height: 360 };
 
 let store;
-let remindersWin = null;
+let onChange = () => {};
 const popups = new Map(); // webContents.id -> { win, reminder }
 
 function newId() {
@@ -51,9 +51,7 @@ function state() {
 
 function changed() {
   store.save();
-  if (remindersWin && !remindersWin.isDestroyed()) {
-    remindersWin.webContents.send('reminders:state', state());
-  }
+  onChange(state());
 }
 
 // ---------- Alerte au centre de l'écran ----------
@@ -127,39 +125,6 @@ function tick() {
   }
 
   if (dirty) changed();
-}
-
-// ---------- Fenêtre "Rappels" ----------
-
-function openRemindersWindow(tab) {
-  if (remindersWin && !remindersWin.isDestroyed()) {
-    if (remindersWin.isMinimized()) remindersWin.restore();
-    remindersWin.show();
-    remindersWin.focus();
-    if (tab) remindersWin.webContents.send('reminders:tab', tab);
-    return;
-  }
-  remindersWin = new BrowserWindow({
-    width: 420,
-    height: 560,
-    minWidth: 360,
-    minHeight: 420,
-    show: false,
-    title: 'GB Post - Rappels',
-    autoHideMenuBar: true,
-    backgroundColor: '#fffdf2',
-    icon: path.join(ASSETS, 'icon.png'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload-reminders.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
-  remindersWin.setMenu(null);
-  remindersWin.loadFile(path.join(__dirname, 'reminders.html'), { query: tab ? { tab } : {} });
-  remindersWin.once('ready-to-show', () => remindersWin.show());
-  remindersWin.on('closed', () => { remindersWin = null; });
 }
 
 // ---------- Communication ----------
@@ -290,8 +255,10 @@ function registerIpc() {
   });
 }
 
-function initReminders(s) {
+// listener : appelé avec le nouvel état à chaque changement (pour la fenêtre principale).
+function initReminders(s, listener) {
   store = s;
+  if (listener) onChange = listener;
   for (const alarm of store.data.alarms) {
     // Alarme dépassée pendant que l'app était fermée : on garde l'heure prévue
     // pour l'afficher au prochain tick si le retard est raisonnable.
@@ -302,4 +269,4 @@ function initReminders(s) {
   setInterval(tick, 1000);
 }
 
-module.exports = { initReminders, openRemindersWindow, showPopup };
+module.exports = { initReminders, getRemindersState: state, showPopup };

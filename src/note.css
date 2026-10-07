@@ -34,7 +34,8 @@ body {
   background: var(--bar);
   flex: none;
 }
-.bar .logo { width: 20px; height: 20px; margin: 0 4px 0 2px; flex: none; }
+.bar .logo { width: 20px; height: 20px; display: block; }
+.bar .logo-btn { width: auto; padding: 2px; margin-right: 2px; opacity: 1; flex: none; }
 .tools { display: flex; align-items: center; gap: 2px; flex: 1; }
 .tools .spacer { flex: 1; }
 .bar button {

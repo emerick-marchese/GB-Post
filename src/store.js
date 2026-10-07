@@ -71,10 +71,12 @@ class Store {
     return note;
   }
 
-  updateNote(id, patch) {
+  // touch : false pour les changements qui ne sont pas des modifications du
+  // contenu (position, taille, affichage), afin de garder la date "modifié".
+  updateNote(id, patch, touch = true) {
     const note = this.getNote(id);
     if (!note) return null;
-    Object.assign(note, patch, { updatedAt: Date.now() });
+    Object.assign(note, patch, touch ? { updatedAt: Date.now() } : {});
     this.save();
     return note;
   }
