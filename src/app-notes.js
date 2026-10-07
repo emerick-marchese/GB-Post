@@ -15,7 +15,7 @@ let noteFilter = 'all';
 let noteQuery = '';
 
 function noteText(note) {
-  return (note.blocks || []).map((b) => b.text || '').join('\n');
+  return [note.title || '', ...(note.blocks || []).map((b) => b.text || '')].join('\n');
 }
 
 function isEmptyNote(note) {
@@ -84,7 +84,8 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePalet
 function previewOf(note) {
   const box = el('div', { className: 'preview' });
   const blocks = (note.blocks || []).filter((b) => b.text?.trim());
-  if (!blocks.length) {
+  if (note.title?.trim()) box.append(el('h3', { className: 'pv-title', textContent: note.title }));
+  if (!blocks.length && !note.title?.trim()) {
     box.append(el('p', { className: 'placeholder', textContent: 'Post-it vide' }));
     return box;
   }

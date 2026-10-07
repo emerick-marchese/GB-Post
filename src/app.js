@@ -10,13 +10,14 @@ function el(tag, props = {}, ...children) {
   return e;
 }
 
-const VIEWS = ['notes', 'alarm', 'timer', 'stopwatch', 'settings'];
+const VIEWS = ['notes', 'alarm', 'timer', 'stopwatch', 'gbdesk', 'settings'];
 
 function showView(view) {
   if (!VIEWS.includes(view)) view = 'notes';
   for (const b of document.querySelectorAll('.nav button')) b.classList.toggle('active', b.dataset.view === view);
   for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.dataset.view === view);
   try { localStorage.setItem('view', view); } catch (_) {}
+  document.dispatchEvent(new CustomEvent('viewchange', { detail: view }));
 }
 
 for (const b of document.querySelectorAll('.nav button')) b.addEventListener('click', () => showView(b.dataset.view));
@@ -66,10 +67,11 @@ window.gbapp.onUpdate(renderUpdate);
 // ---------- Démarrage ----------
 
 window.addEventListener('DOMContentLoaded', async () => {
-  let view = new URLSearchParams(location.search).get('view');
+  const params = new URLSearchParams(location.search);
+  let view = params.get('view');
   if (!view) { try { view = localStorage.getItem('view'); } catch (_) {} }
   showView(view);
   renderSettings(await window.gbapp.getSettings());
   renderUpdate(await window.gbapp.getUpdateStatus());
-  await Promise.all([initReminders(), initNotes()]);
+  await Promise.all([initReminders(), initNotes(), initGbdesk(params.get('gbdesk'))]);
 });

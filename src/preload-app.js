@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('gbapp', {
   onSettings: listen('app:settings'),
   setAutoStart: call('app:set-autostart'),
 
+  openExternal: call('app:open-external'),
+
   // Mises à jour
   getUpdateStatus: call('app:update-status'),
   onUpdate: listen('app:update'),
@@ -46,4 +48,16 @@ contextBridge.exposeInMainWorld('gbreminders', {
   pauseStopwatch: call('stopwatch:pause'),
   lapStopwatch: call('stopwatch:lap'),
   resetStopwatch: call('stopwatch:reset'),
+});
+
+contextBridge.exposeInMainWorld('gbdesk', {
+  get: call('gbdesk:get'),
+  onState: listen('gbdesk:state'),
+  onNavigate: listen('gbdesk:navigate'),
+  save: call('gbdesk:save'),
+  test: call('gbdesk:test'),
+  checkNow: call('gbdesk:check-now'),
+  simulate: call('gbdesk:simulate'),
+  markRead: call('gbdesk:mark-read'),
+  link: call('gbdesk:link'),
 });

@@ -2,12 +2,13 @@
 // - Une fenêtre principale pour gérer les post-its, les rappels et les réglages.
 // - Chaque post-it est une petite fenêtre sans bordure posée sur le bureau.
 // - L'app reste active dans la zone de notification et se lance au démarrage.
-const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const Store = require('./store');
 const { initReminders } = require('./reminders');
+const { initGbdesk, GBDESK_PARTITION } = require('./gbdesk');
 const { initUpdater, checkForUpdates, installUpdate, getUpdateStatus } = require('./updater');
 
 const APP_NAME = 'GB Post';
@@ -244,7 +245,7 @@ function openNoteForEdit(id) {
 async function confirmDelete(id, parent) {
   const note = store.getNote(id);
   if (!note) return false;
-  const isEmpty = !(note.blocks || []).some((b) => b.text?.trim());
+  const isEmpty = !note.title?.trim() && !(note.blocks || []).some((b) => b.text?.trim());
   if (!isEmpty) {
     const { response } = await dialog.showMessageBox(parent, {
       type: 'question',
@@ -273,12 +274,14 @@ function notesChanged() {
   sendToMain('app:notes', store.notes);
 }
 
-function openMainWindow(view) {
+// gbdeskUrl : page du site GBDESK à afficher dans l'onglet GBDESK (ex. un ticket).
+function openMainWindow(view, gbdeskUrl) {
   if (mainWin && !mainWin.isDestroyed()) {
     if (mainWin.isMinimized()) mainWin.restore();
     mainWin.show();
     mainWin.focus();
     if (view) sendToMain('app:view', view);
+    if (gbdeskUrl) sendToMain('gbdesk:navigate', gbdeskUrl);
     return;
   }
   mainWin = new BrowserWindow({
@@ -296,10 +299,24 @@ function openMainWindow(view) {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      webviewTag: true, // onglet GBDESK : le site s'affiche dans l'app
     },
   });
   mainWin.setMenu(null);
-  mainWin.loadFile(path.join(__dirname, 'app.html'), { query: view ? { view } : {} });
+  // Le site GBDESK affiché dans l'onglet : jamais d'accès à Node, toujours la
+  // même session (pour rester connecté et partager la connexion avec la surveillance).
+  mainWin.webContents.on('will-attach-webview', (event, webPreferences, params) => {
+    delete webPreferences.preload;
+    webPreferences.nodeIntegration = false;
+    webPreferences.contextIsolation = true;
+    webPreferences.sandbox = true;
+    params.partition = GBDESK_PARTITION;
+    if (params.src && !/^https?:\/\//i.test(params.src)) event.preventDefault();
+  });
+  const query = {};
+  if (view) query.view = view;
+  if (gbdeskUrl) query.gbdesk = gbdeskUrl;
+  mainWin.loadFile(path.join(__dirname, 'app.html'), { query });
   mainWin.once('ready-to-show', () => mainWin.show());
   // Fermer la fenêtre ne quitte pas l'app : elle reste dans la zone de notification.
   mainWin.on('close', (e) => {
@@ -328,6 +345,7 @@ function buildTrayMenu() {
     { label: '⏰ Alarmes', click: () => openMainWindow('alarm') },
     { label: '⏳ Minuteurs', click: () => openMainWindow('timer') },
     { label: '⏱ Chronomètre', click: () => openMainWindow('stopwatch') },
+    { label: '🎫 GBDESK', click: () => openMainWindow('gbdesk') },
     { type: 'separator' },
     {
       label: 'Lancer au démarrage',
@@ -376,6 +394,7 @@ ipcMain.handle('note:update', (event, patch) => {
   for (const key of ['blocks', 'color']) {
     if (key in patch) allowed[key] = patch[key];
   }
+  if (typeof patch.title === 'string') allowed.title = patch.title.slice(0, 200);
   const note = store.updateNote(id, allowed);
   if (allowed.color) windows.get(id)?.setBackgroundColor(allowed.color);
   notesChanged();
@@ -420,8 +439,21 @@ ipcMain.handle('app:notes-hide-all', () => hideAllNotes());
 ipcMain.handle('app:settings', () => ({ ...store.settings, dataFile: store.file, version: app.getVersion() }));
 ipcMain.handle('app:set-autostart', (_e, enabled) => setAutoStart(!!enabled));
 ipcMain.handle('app:update-status', () => getUpdateStatus());
+ipcMain.handle('app:open-external', (_e, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) shell.openExternal(url);
+});
 ipcMain.handle('app:update-check', () => checkForUpdates());
 ipcMain.handle('app:update-install', () => installUpdate());
+
+// Liens du site GBDESK qui veulent ouvrir une nouvelle fenêtre : on les
+// affiche dans l'onglet GBDESK plutôt que dans une fenêtre sans contrôle.
+app.on('web-contents-created', (_e, contents) => {
+  if (contents.getType() !== 'webview') return;
+  contents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) contents.loadURL(url);
+    return { action: 'deny' };
+  });
+});
 
 // ---------- Cycle de vie ----------
 
@@ -444,6 +476,10 @@ app.whenReady().then(() => {
 
   createTray();
   initReminders(store, (state) => sendToMain('reminders:state', state));
+  initGbdesk(store, {
+    onStateChange: (state) => sendToMain('gbdesk:state', state),
+    openTicket: (url) => openMainWindow('gbdesk', url),
+  });
   initUpdater((status) => {
     sendToMain('app:update', status);
     if (status.state === 'ready') tray?.setContextMenu(buildTrayMenu());

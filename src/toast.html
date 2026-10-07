@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>GBDESK - Nouveau ticket</title>
+  <link rel="stylesheet" href="toast.css">
+</head>
+<body>
+  <div class="toast" id="toast" title="Cliquer pour ouvrir le ticket">
+    <img class="logo" src="../assets/icon.png" alt="">
+    <div class="body">
+      <div class="head"><span class="tag">GBDESK</span><span id="kind">Nouveau ticket</span><span id="time"></span></div>
+      <div class="subject" id="subject"></div>
+      <div class="author" id="author"></div>
+    </div>
+    <div class="actions">
+      <button id="close" class="close" title="Fermer">✕</button>
+      <button id="open" class="open">Ouvrir</button>
+    </div>
+    <div class="timer"><div id="bar"></div></div>
+  </div>
+  <script src="toast.js"></script>
+</body>
+</html>

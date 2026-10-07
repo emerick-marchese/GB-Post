@@ -127,6 +127,26 @@ textarea {
 }
 textarea::placeholder { color: var(--muted); }
 
+/* Titre du post-it */
+.title {
+  display: block;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 2px 0 4px 16px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  outline: none;
+}
+.title:focus { border-bottom-color: var(--line); }
+.title::placeholder { color: var(--muted); font-weight: 600; }
+body.pinned .title { padding-left: 0; cursor: default; }
+body.pinned .title.empty { display: none; }
+
 /* Blocs : paragraphes de texte et cases à cocher, dans n'importe quel ordre. */
 .blocks { display: flex; flex-direction: column; gap: 2px; }
 .block {

@@ -17,6 +17,7 @@ const COLORS = [
 
 const $ = (sel) => document.querySelector(sel);
 const blocksEl = $('#blocks');
+const titleEl = $('#title');
 const paletteEl = $('#palette');
 const swatchesEl = $('#swatches');
 const customColorEl = $('#custom-color');
@@ -84,6 +85,7 @@ function applyPinned(pinned) {
   note.pinned = pinned;
   document.body.classList.toggle('pinned', pinned);
   for (const ta of blocksEl.querySelectorAll('textarea')) ta.readOnly = pinned;
+  titleEl.readOnly = pinned;
   if (pinned) {
     closePalette();
     document.activeElement?.blur();
@@ -249,6 +251,9 @@ function renderBlocks() {
           e.preventDefault();
           removeBlock(index, true);
         }
+      } else if (e.key === 'ArrowUp' && index === 0 && !ta.value.slice(0, ta.selectionStart).includes('\n')) {
+        e.preventDefault();
+        titleEl.focus();
       } else if (e.key === 'ArrowUp' && index > 0 && !ta.value.slice(0, ta.selectionStart).includes('\n')) {
         e.preventDefault();
         focusBlock(index - 1);
@@ -304,6 +309,10 @@ window.gbpost.onChanged((updated) => {
   if (updated.color && updated.color !== note.color) applyColor(updated.color);
   note.color = updated.color;
   if (!!updated.pinned !== !!note.pinned) applyPinned(!!updated.pinned);
+  if ((updated.title || '') !== (note.title || '') && document.activeElement !== titleEl) {
+    note.title = updated.title;
+    renderTitle();
+  }
 });
 
 window.addEventListener('resize', growAll);
@@ -320,6 +329,24 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- Démarrage ----------
 
+// ---------- Titre ----------
+
+function renderTitle() {
+  titleEl.value = note.title || '';
+  titleEl.classList.toggle('empty', !titleEl.value.trim());
+}
+
+titleEl.addEventListener('input', () => {
+  titleEl.classList.toggle('empty', !titleEl.value.trim());
+  save({ title: titleEl.value });
+});
+titleEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    focusBlock(0, 'start');
+  }
+});
+
 async function init() {
   buildPalette();
   note = await window.gbpost.getNote();
@@ -328,9 +355,10 @@ async function init() {
     note.blocks = [{ id: uid(), type: 'text', text: '' }];
   }
   applyColor(note.color || COLORS[0]);
+  renderTitle();
   renderBlocks();
   applyPinned(!!note.pinned);
-  if (!note.pinned && note.blocks.length === 1 && !note.blocks[0].text) focusBlock(0);
+  if (!note.pinned && !note.title && note.blocks.length === 1 && !note.blocks[0].text) titleEl.focus();
 }
 
 init();
