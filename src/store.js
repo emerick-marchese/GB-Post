@@ -21,18 +21,6 @@ class Store {
       alarms: [],
       timers: [],
       stopwatch: { running: false, startedAt: null, elapsedMs: 0, laps: [] },
-      gbdesk: {
-        siteUrl: '',
-        apiUrl: '',
-        header: '',
-        ticketUrl: '',
-        intervalSec: 60,
-        notify: true,
-        fields: { id: '', subject: '', author: '' },
-        seen: [],
-        tickets: [],
-        unread: 0,
-      },
     };
   }
 
@@ -47,7 +35,6 @@ class Store {
         alarms: Array.isArray(parsed.alarms) ? parsed.alarms : [],
         timers: Array.isArray(parsed.timers) ? parsed.timers : [],
         stopwatch: { ...d.stopwatch, ...(parsed.stopwatch || {}) },
-        gbdesk: { ...d.gbdesk, ...(parsed.gbdesk || {}) },
       };
     } catch (err) {
       if (err.code !== 'ENOENT') {

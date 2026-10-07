@@ -18,8 +18,6 @@
       <button data-view="alarm"><span class="ico">⏰</span>Alarmes<span class="count" id="count-alarms"></span></button>
       <button data-view="timer"><span class="ico">⏳</span>Minuteurs<span class="count" id="count-timers"></span></button>
       <button data-view="stopwatch"><span class="ico">⏱</span>Chrono<span class="count dot" id="count-sw"></span></button>
-      <div class="nav-title">Entreprise</div>
-      <button data-view="gbdesk"><span class="ico">🎫</span>GBDESK<span class="count badge-new" id="count-gbdesk"></span></button>
       <div class="nav-spacer"></div>
       <button data-view="settings"><span class="ico">⚙️</span>Réglages</button>
     </nav>
@@ -118,101 +116,6 @@
       </div>
     </section>
 
-    <!-- ================= GBDESK ================= -->
-    <section class="view view-full" data-view="gbdesk">
-      <header class="desk-bar">
-        <h1>GBDESK</h1>
-        <div class="desk-nav" id="desk-nav">
-          <button id="desk-back" class="icon-btn" title="Page précédente">←</button>
-          <button id="desk-forward" class="icon-btn" title="Page suivante">→</button>
-          <button id="desk-reload" class="icon-btn" title="Recharger">↻</button>
-          <button id="desk-home" class="icon-btn" title="Accueil GBDESK">⌂</button>
-        </div>
-        <span id="desk-status" class="desk-status"></span>
-        <div class="head-actions">
-          <button id="desk-external" class="ghost" title="Ouvrir la page dans le navigateur">Navigateur ↗</button>
-          <button id="desk-toggle-list" class="ghost">Tickets</button>
-          <button id="desk-config-open" class="ghost">⚙ Configuration</button>
-        </div>
-      </header>
-      <div class="desk-body">
-        <div class="desk-site" id="desk-site">
-          <div id="desk-empty" class="empty-state">
-            <img src="../assets/icon.png" alt="">
-            <p>GBDESK n'est pas encore configuré.</p>
-            <button id="desk-config-open2" class="primary">⚙ Configurer GBDESK</button>
-          </div>
-        </div>
-        <aside class="desk-list" id="desk-list">
-          <div class="desk-list-head">
-            <span>Derniers tickets</span>
-            <button id="desk-check" class="icon-btn" title="Vérifier maintenant">↻</button>
-          </div>
-          <ul id="desk-tickets"></ul>
-          <p id="desk-tickets-empty" class="empty">Aucun ticket pour l'instant.</p>
-        </aside>
-      </div>
-
-      <!-- Configuration -->
-      <div id="desk-config" class="modal" hidden>
-        <form id="desk-form" class="card modal-card">
-          <h2>Configuration GBDESK</h2>
-          <label class="field">
-            <span>Adresse du site GBDESK</span>
-            <input id="desk-site-url" type="url" placeholder="https://gbdesk.mon-entreprise.fr">
-            <small>Le site s'affiche dans l'onglet GBDESK. Connecte-toi une fois : la connexion est gardée.</small>
-          </label>
-          <label class="field">
-            <span>Adresse de la liste des tickets (JSON)</span>
-            <input id="desk-api-url" type="url" placeholder="https://gbdesk.mon-entreprise.fr/api/tickets">
-            <small>Adresse qui renvoie les tickets au format JSON. GB Post la consulte régulièrement pour détecter les nouveaux tickets, avec ta connexion de l'onglet GBDESK.</small>
-          </label>
-          <label class="field">
-            <span>En-tête d'authentification (facultatif)</span>
-            <input id="desk-header" type="text" placeholder="Authorization: Bearer mon-jeton" autocomplete="off" spellcheck="false">
-            <small>Seulement si GBDESK fournit une clé d'API.</small>
-          </label>
-          <label class="field">
-            <span>Lien d'un ticket (facultatif)</span>
-            <input id="desk-ticket-url" type="text" placeholder="https://gbdesk.mon-entreprise.fr/tickets/{id}">
-            <small><code>{id}</code> est remplacé par le numéro du ticket.</small>
-          </label>
-          <div class="row">
-            <label class="field grow">
-              <span>Vérifier toutes les</span>
-              <select id="desk-interval">
-                <option value="15">15 secondes</option>
-                <option value="30">30 secondes</option>
-                <option value="60">1 minute</option>
-                <option value="120">2 minutes</option>
-                <option value="300">5 minutes</option>
-              </select>
-            </label>
-            <label class="field toggle-field">
-              <span>Notifications</span>
-              <label class="switch"><input id="desk-notify" type="checkbox"><span></span></label>
-            </label>
-          </div>
-          <details class="advanced">
-            <summary>Avancé : noms des champs dans le JSON</summary>
-            <small>Laisse vide pour la détection automatique. Accepte les chemins, ex. <code>requester.name</code>.</small>
-            <div class="row">
-              <label class="field grow"><span>Numéro</span><input id="desk-f-id" type="text" placeholder="id"></label>
-              <label class="field grow"><span>Objet</span><input id="desk-f-subject" type="text" placeholder="subject"></label>
-              <label class="field grow"><span>Demandeur</span><input id="desk-f-author" type="text" placeholder="requester.name"></label>
-            </div>
-          </details>
-          <div id="desk-test-result" class="test-result" hidden></div>
-          <div class="row end">
-            <button type="button" id="desk-simulate" class="ghost">Voir une notification exemple</button>
-            <button type="button" id="desk-test" class="ghost">Tester</button>
-            <button type="button" id="desk-config-cancel" class="ghost">Fermer</button>
-            <button type="submit" class="primary">Enregistrer</button>
-          </div>
-        </form>
-      </div>
-    </section>
-
     <!-- ================= Réglages ================= -->
     <section class="view" data-view="settings">
       <header class="view-head"><h1>Réglages</h1></header>
@@ -249,6 +152,5 @@
   <script src="app.js"></script>
   <script src="app-reminders.js"></script>
   <script src="app-notes.js"></script>
-  <script src="app-gbdesk.js"></script>
 </body>
 </html>

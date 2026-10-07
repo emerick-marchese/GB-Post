@@ -12,7 +12,6 @@ En ouvrant GB Post (raccourci du bureau, menu Démarrer ou clic sur le logo à c
 
 - **📝 Post-its** : tous tes post-its en un coup d'œil (aperçu du texte et des cases), recherche, filtres (sur le bureau / épinglés / masqués), et pour chacun : ✏️ modifier, 👁 afficher ou 🙈 masquer du bureau, 🎨 couleur, 📌 épingler, 🗑 supprimer. « Tout afficher » / « Tout masquer » et « ＋ Nouveau post-it ».
 - **⏰ Alarmes**, **⏳ Minuteurs**, **⏱ Chrono** : tous les rappels (voir plus bas).
-- **🎫 GBDESK** : le site de tickets de l'entreprise, directement dans l'app, et les notifications de nouveaux tickets (voir plus bas).
 - **⚙️ Réglages** : lancement au démarrage, emplacement de la sauvegarde.
 - En bas du menu : le **prochain rappel** à venir.
 
@@ -47,19 +46,6 @@ Les rappels tournent en fond même si la fenêtre est fermée, et sont sauvegard
 **Quand c'est l'heure**, pas de sonnerie : une alerte apparaît **au milieu de l'écran**, par-dessus tout, avec l'heure et la tâche. Elle arrive en « pop » puis grossit / rétrécit en continu pour bien se voir (la pulsation s'arrête quand la souris passe dessus pour cliquer facilement). Boutons **C'est fait ✓** (ou `Entrée` / `Échap`) et **Dans 5 min** pour la reporter.
 
 L'application tourne en fond dans la zone de notification (à côté de l'horloge). Clic sur le logo : ouvre la fenêtre GB Post. Clic droit : nouveau post-it, afficher tous les post-its, rappels, lancer au démarrage, quitter.
-
-## GBDESK : notifications de nouveaux tickets
-
-Onglet **🎫 GBDESK** → **⚙ Configuration** :
-
-- **Adresse du site GBDESK** : le site s'affiche dans l'onglet (navigation ←, →, ↻, ⌂ et « Navigateur ↗ »). Connecte-toi une fois : la connexion est conservée.
-- **Adresse de la liste des tickets (JSON)** : une adresse de GBDESK qui renvoie les tickets en JSON. GB Post la consulte régulièrement (15 s à 5 min) avec la même connexion que l'onglet. Ajoute un **en-tête d'authentification** (`Authorization: Bearer …`) si GBDESK fournit une clé d'API.
-- **Lien d'un ticket** : ex. `https://gbdesk…/tickets/{id}` pour ouvrir le bon ticket.
-- **Tester** vérifie la connexion et affiche un exemple de ticket lu ; **Voir une notification exemple** montre la notification.
-
-Le numéro, l'objet et le demandeur sont détectés automatiquement dans le JSON (`id`, `subject`/`objet`/`titre`, `requester`/`demandeur`/`author`…). Sinon, indique les noms des champs dans « Avancé ».
-
-À chaque **nouveau ticket**, une notification apparaît **en haut au milieu de l'écran** avec le logo, l'objet du ticket et la personne qui l'a créé. Elle se ferme seule après 20 s (pause quand la souris est dessus). Un clic ouvre le ticket dans l'onglet GBDESK. La colonne « Derniers tickets » liste les tickets récents (les nouveaux sont surlignés pendant une heure) et le menu affiche le nombre de tickets non vus. Au premier lancement, les tickets déjà existants ne sont pas notifiés.
 
 ## Télécharger l'installateur
 
