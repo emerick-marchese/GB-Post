@@ -29,6 +29,10 @@
   </aside>
 
   <main class="main">
+    <div id="update-banner" class="update-banner" hidden>
+      <span>🎉 Nouvelle version <b id="update-banner-version"></b> prête.</span>
+      <button id="update-banner-install" class="primary small">Redémarrer et mettre à jour</button>
+    </div>
     <!-- ================= Post-its ================= -->
     <section class="view" data-view="notes">
       <header class="view-head">
@@ -129,6 +133,14 @@
             <div class="meta">Chaque changement est enregistré tout de suite dans :</div>
             <code id="set-datafile" class="path"></code>
           </div>
+        </div>
+        <div class="card setting">
+          <div class="info">
+            <div class="label">Mises à jour</div>
+            <div class="meta" id="update-status">GB Post se met à jour tout seul : les nouvelles versions sont téléchargées automatiquement et installées sur place, sans perdre tes post-its ni tes rappels.</div>
+          </div>
+          <button id="update-check" class="ghost">Rechercher</button>
+          <button id="update-install" class="primary" hidden>Redémarrer</button>
         </div>
         <p class="about">GB Post <span id="set-version"></span></p>
       </div>

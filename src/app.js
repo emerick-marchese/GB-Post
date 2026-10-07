@@ -33,6 +33,36 @@ function renderSettings(s) {
 $('#set-autostart').addEventListener('change', (e) => window.gbapp.setAutoStart(e.target.checked));
 window.gbapp.onSettings(renderSettings);
 
+// ---------- Mises à jour ----------
+
+const UPDATE_TEXT = {
+  idle: 'GB Post se met à jour tout seul.',
+  checking: 'Recherche de mises à jour…',
+  'up-to-date': 'Tu as la dernière version. ✓',
+  downloading: 'Téléchargement de la nouvelle version…',
+  ready: 'Nouvelle version prête : redémarre GB Post pour l\'installer (sinon elle s\'installera à la prochaine fermeture).',
+  error: 'Impossible de vérifier les mises à jour pour le moment (connexion ?).',
+  unsupported: 'Mises à jour automatiques disponibles dans la version installée de GB Post.',
+};
+
+function renderUpdate(u) {
+  if (!u) return;
+  let text = UPDATE_TEXT[u.state] || UPDATE_TEXT.idle;
+  if (u.state === 'downloading') text = `Téléchargement de la version ${u.version || ''}… ${u.percent || 0} %`;
+  $('#update-status').textContent = text;
+  const ready = u.state === 'ready';
+  $('#update-install').hidden = !ready;
+  $('#update-check').hidden = ready;
+  $('#update-check').disabled = u.state === 'checking' || u.state === 'downloading' || u.state === 'unsupported';
+  $('#update-banner').hidden = !ready;
+  $('#update-banner-version').textContent = u.version || '';
+}
+
+$('#update-check').addEventListener('click', () => window.gbapp.checkForUpdates());
+$('#update-install').addEventListener('click', () => window.gbapp.installUpdate());
+$('#update-banner-install').addEventListener('click', () => window.gbapp.installUpdate());
+window.gbapp.onUpdate(renderUpdate);
+
 // ---------- Démarrage ----------
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -40,5 +70,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!view) { try { view = localStorage.getItem('view'); } catch (_) {} }
   showView(view);
   renderSettings(await window.gbapp.getSettings());
+  renderUpdate(await window.gbapp.getUpdateStatus());
   await Promise.all([initReminders(), initNotes()]);
 });

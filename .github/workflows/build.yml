@@ -1,5 +1,9 @@
 name: Installateur Windows
 
+# À chaque mise à jour du code : nouvelle version numérotée (1.1.<n°>),
+# construite sur Windows et publiée dans les Releases GitHub. Les copies de
+# GB Post déjà installées la détectent et se mettent à jour toutes seules.
+
 on:
   push:
     branches: [claude/gb-post-app-fxfuqe, main, master]
@@ -8,9 +12,15 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   windows:
     runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,22 +31,20 @@ jobs:
 
       - run: npm ci
 
-      - name: Construire l'installateur
-        run: npx electron-builder --win nsis --x64 --publish never
+      - name: Numéro de version
+        shell: bash
+        run: npm version "1.1.${{ github.run_number }}" --no-git-tag-version
+
+      - name: Construire et publier la version
+        run: npx electron-builder --win nsis --x64 --publish always
 
       - uses: actions/upload-artifact@v4
         with:
           name: GB-Post-Setup
           path: dist/*.exe
 
-      - name: Publier dans la release "GB Post"
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: gb-post-latest
-          name: GB Post (dernière version)
-          target_commitish: ${{ github.sha }}
-          make_latest: true
-          body: |
-            Télécharge **GB-Post-Setup.exe** ci-dessous, puis double-clique dessus pour installer GB Post.
-            Construit à partir du commit ${{ github.sha }}.
-          files: dist/GB-Post-Setup.exe
+      # L'ancienne release sans numéro de version n'est plus utilisée.
+      - name: Nettoyer l'ancienne release
+        shell: bash
+        continue-on-error: true
+        run: gh release delete gb-post-latest --cleanup-tag --yes --repo "${{ github.repository }}"

@@ -21,6 +21,12 @@ contextBridge.exposeInMainWorld('gbapp', {
   getSettings: call('app:settings'),
   onSettings: listen('app:settings'),
   setAutoStart: call('app:set-autostart'),
+
+  // Mises à jour
+  getUpdateStatus: call('app:update-status'),
+  onUpdate: listen('app:update'),
+  checkForUpdates: call('app:update-check'),
+  installUpdate: call('app:update-install'),
 });
 
 contextBridge.exposeInMainWorld('gbreminders', {

@@ -45,6 +45,17 @@
       "target": "AppImage",
       "icon": "assets/icon.png",
       "category": "Utility"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "emerick-marchese",
+        "repo": "GB-Post",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

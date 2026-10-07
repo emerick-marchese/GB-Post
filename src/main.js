@@ -8,6 +8,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const Store = require('./store');
 const { initReminders } = require('./reminders');
+const { initUpdater, checkForUpdates, installUpdate, getUpdateStatus } = require('./updater');
 
 const APP_NAME = 'GB Post';
 const ASSETS = path.join(__dirname, '..', 'assets');
@@ -313,7 +314,12 @@ function openMainWindow(view) {
 // ---------- Zone de notification ----------
 
 function buildTrayMenu() {
+  const update = getUpdateStatus();
   return Menu.buildFromTemplate([
+    ...(update.state === 'ready' ? [
+      { label: `🔄 Mettre à jour vers la version ${update.version}`, click: installUpdate },
+      { type: 'separator' },
+    ] : []),
     { label: `Ouvrir ${APP_NAME}`, click: () => openMainWindow() },
     { type: 'separator' },
     { label: 'Nouveau post-it', click: () => createNote() },
@@ -413,6 +419,9 @@ ipcMain.handle('app:notes-show-all', () => showAllNotes());
 ipcMain.handle('app:notes-hide-all', () => hideAllNotes());
 ipcMain.handle('app:settings', () => ({ ...store.settings, dataFile: store.file, version: app.getVersion() }));
 ipcMain.handle('app:set-autostart', (_e, enabled) => setAutoStart(!!enabled));
+ipcMain.handle('app:update-status', () => getUpdateStatus());
+ipcMain.handle('app:update-check', () => checkForUpdates());
+ipcMain.handle('app:update-install', () => installUpdate());
 
 // ---------- Cycle de vie ----------
 
@@ -435,6 +444,10 @@ app.whenReady().then(() => {
 
   createTray();
   initReminders(store, (state) => sendToMain('reminders:state', state));
+  initUpdater((status) => {
+    sendToMain('app:update', status);
+    if (status.state === 'ready') tray?.setContextMenu(buildTrayMenu());
+  });
 
   for (const note of store.notes) {
     migrateNote(note);

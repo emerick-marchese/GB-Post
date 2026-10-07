@@ -48,7 +48,15 @@ L'application tourne en fond dans la zone de notification (à côté de l'horlog
 
 ## Télécharger l'installateur
 
-L'installateur Windows est construit automatiquement par GitHub Actions à chaque mise à jour : onglet **Releases** du dépôt → **GB Post (dernière version)** → `GB-Post-Setup.exe`.
+Dernière version : **https://github.com/emerick-marchese/GB-Post/releases/latest/download/GB-Post-Setup.exe**
+
+### Mises à jour
+
+GB Post **se met à jour tout seul** : il vérifie au démarrage puis toutes les 4 h s'il existe une nouvelle version, la télécharge en arrière-plan et affiche « Nouvelle version prête — Redémarrer ». Si tu ne cliques pas, elle s'installe à la prochaine fermeture. C'est la **même application** qui est mise à jour : tes post-its, rappels et réglages sont conservés. (Réglages → Mises à jour → « Rechercher » pour vérifier à la main.)
+
+Relancer l'installateur sur un PC où GB Post est déjà installé fait aussi une simple mise à jour, sans créer de deuxième application.
+
+Côté développement : chaque push construit une nouvelle version `1.1.<n°>` via GitHub Actions et la publie dans les Releases (avec le fichier `latest.yml` lu par l'app).
 
 ## Lancer en développement
 

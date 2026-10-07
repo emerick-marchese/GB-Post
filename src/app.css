@@ -311,3 +311,18 @@ input[type="search"] {
 .setting .meta { color: var(--muted); font-size: 13px; }
 .path { display: block; margin-top: 6px; font-size: 12px; padding: 6px 8px; background: var(--field); border-radius: 6px; overflow-wrap: anywhere; user-select: text; }
 .about { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
+
+/* Bandeau "mise à jour prête" */
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 26px;
+  background: var(--accent);
+  color: #fff;
+}
+.update-banner[hidden] { display: none; }
+.update-banner span { flex: 1; }
+.update-banner .primary { background: #fff; color: var(--accent); }
+.update-banner .primary:hover { background: #f3e3e6; }
+.setting .ghost:disabled { opacity: .45; cursor: default; }
