@@ -288,7 +288,7 @@ function openMainWindow(view) {
     show: false,
     title: APP_NAME,
     autoHideMenuBar: true,
-    backgroundColor: '#fffdf2',
+    backgroundColor: '#1e1e23',
     icon: path.join(ASSETS, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload-app.js'),
