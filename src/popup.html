@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>GB Post - Rappel</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="stage">
+    <div class="card" id="card">
+      <img class="logo" src="../assets/icon.png" alt="">
+      <div class="kind" id="kind">⏰ Rappel</div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="task" id="task"></div>
+      <div class="actions">
+        <button id="snooze" class="ghost">Dans 5 min</button>
+        <button id="done" class="primary">C'est fait ✓</button>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

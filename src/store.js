@@ -10,17 +10,31 @@ class Store {
   constructor(dir) {
     this.file = path.join(dir, 'gb-post-data.json');
     this.timer = null;
-    this.data = { settings: { autoStart: true }, notes: [] };
+    this.data = Store.defaults();
     this.load();
+  }
+
+  static defaults() {
+    return {
+      settings: { autoStart: true },
+      notes: [],
+      alarms: [],
+      timers: [],
+      stopwatch: { running: false, startedAt: null, elapsedMs: 0, laps: [] },
+    };
   }
 
   load() {
     try {
       const raw = fs.readFileSync(this.file, 'utf8');
       const parsed = JSON.parse(raw);
+      const d = Store.defaults();
       this.data = {
-        settings: { autoStart: true, ...(parsed.settings || {}) },
+        settings: { ...d.settings, ...(parsed.settings || {}) },
         notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+        alarms: Array.isArray(parsed.alarms) ? parsed.alarms : [],
+        timers: Array.isArray(parsed.timers) ? parsed.timers : [],
+        stopwatch: { ...d.stopwatch, ...(parsed.stopwatch || {}) },
       };
     } catch (err) {
       if (err.code !== 'ENOENT') {

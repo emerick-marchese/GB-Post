@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const Store = require('./store');
+const { initReminders, openRemindersWindow } = require('./reminders');
 
 const APP_NAME = 'GB Post';
 const ASSETS = path.join(__dirname, '..', 'assets');
@@ -187,6 +188,11 @@ function buildTrayMenu() {
     { label: 'Nouveau post-it', click: () => createNote() },
     { label: 'Afficher tous les post-its', click: showAllNotes },
     { type: 'separator' },
+    { label: 'Rappels…', click: () => openRemindersWindow() },
+    { label: '⏰ Nouvelle alarme', click: () => openRemindersWindow('alarm') },
+    { label: '⏳ Minuteur', click: () => openRemindersWindow('timer') },
+    { label: '⏱ Chronomètre', click: () => openRemindersWindow('stopwatch') },
+    { type: 'separator' },
     {
       label: 'Lancer au démarrage',
       type: 'checkbox',
@@ -299,6 +305,7 @@ app.whenReady().then(() => {
   }
 
   createTray();
+  initReminders(store);
 
   if (store.notes.length === 0) {
     createNote();

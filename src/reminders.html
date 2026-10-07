@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>GB Post - Rappels</title>
+  <link rel="stylesheet" href="reminders.css">
+</head>
+<body>
+  <header class="top">
+    <img src="../assets/icon.png" alt="" class="logo">
+    <h1>Rappels</h1>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="alarm">⏰ Alarme</button>
+    <button role="tab" data-tab="timer">⏳ Minuteur</button>
+    <button role="tab" data-tab="stopwatch">⏱ Chrono</button>
+  </nav>
+
+  <!-- Alarme -->
+  <section class="panel" data-panel="alarm">
+    <form id="alarm-form" class="card form">
+      <div class="row">
+        <input id="alarm-time" type="time" required class="big-time">
+        <input id="alarm-label" type="text" maxlength="200" placeholder="Tâche à faire…" class="grow">
+      </div>
+      <div class="days" id="alarm-days"></div>
+      <div class="row end">
+        <button type="button" id="alarm-cancel" class="ghost" hidden>Annuler</button>
+        <button type="submit" id="alarm-submit" class="primary">Ajouter l'alarme</button>
+      </div>
+    </form>
+    <ul id="alarm-list" class="list"></ul>
+    <p id="alarm-empty" class="empty">Aucune alarme pour l'instant.</p>
+  </section>
+
+  <!-- Minuteur -->
+  <section class="panel" data-panel="timer">
+    <form id="timer-form" class="card form">
+      <div class="row duration">
+        <label><input id="timer-h" type="number" min="0" max="99" value="0"><span>h</span></label>
+        <label><input id="timer-m" type="number" min="0" max="59" value="5"><span>min</span></label>
+        <label><input id="timer-s" type="number" min="0" max="59" value="0"><span>s</span></label>
+      </div>
+      <div class="presets" id="timer-presets"></div>
+      <div class="row">
+        <input id="timer-label" type="text" maxlength="200" placeholder="Tâche à faire…" class="grow">
+        <button type="submit" class="primary">Démarrer</button>
+      </div>
+    </form>
+    <ul id="timer-list" class="list"></ul>
+    <p id="timer-empty" class="empty">Aucun minuteur en cours.</p>
+  </section>
+
+  <!-- Chrono -->
+  <section class="panel" data-panel="stopwatch">
+    <div class="card stopwatch">
+      <div id="sw-display" class="sw-display">00:00<small>.00</small></div>
+      <div class="row center">
+        <button id="sw-reset" class="ghost">Réinitialiser</button>
+        <button id="sw-toggle" class="primary">Démarrer</button>
+        <button id="sw-lap" class="ghost">Tour</button>
+      </div>
+    </div>
+    <ol id="sw-laps" class="laps"></ol>
+  </section>
+
+  <script src="reminders-ui.js"></script>
+</body>
+</html>

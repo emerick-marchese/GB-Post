@@ -16,10 +16,22 @@ Des post-its à poser sur ton bureau (Windows, macOS, Linux).
 - **Couleurs** : bouton 🎨 → 10 couleurs prêtes + « Autre… » pour n'importe quelle couleur.
 - **Nouveau post-it** : bouton ＋ (ou `Ctrl+N`), ou double-clic sur l'icône GB Post dans la zone de notification.
 - **✕ Supprimer** (confirmation demandée si le post-it n'est pas vide).
-- **Sauvegarde automatique à chaque changement** : texte, cases cochées, couleur, épinglage, position et taille. Rien à enregistrer à la main ; tout est restauré au prochain lancement.
+- **Sauvegarde automatique à chaque changement** : texte, cases cochées, couleur, épinglage, position et taille, ainsi que les alarmes, minuteurs et le chrono. Rien à enregistrer à la main ; tout est restauré au prochain lancement.
 - **Actif au démarrage** : GB Post se lance tout seul à l'ouverture de session (désactivable via clic droit sur l'icône de la zone de notification → « Lancer au démarrage »).
 
-L'application tourne en fond dans la zone de notification (à côté de l'horloge). Clic droit sur le logo pour : nouveau post-it, afficher tous les post-its, lancer au démarrage, quitter.
+## Rappels : alarme, minuteur, chrono
+
+Depuis l'icône GB Post de la zone de notification (clic droit → **Rappels…**, ou directement ⏰ / ⏳ / ⏱) :
+
+- **⏰ Alarme** : une heure + la tâche à faire. Choisis les jours pour la répéter (L M M J V S D) ; sans jour, elle sonne une seule fois puis se désactive. Interrupteur pour activer/désactiver, clic sur une alarme pour la modifier.
+- **⏳ Minuteur** : durée en h / min / s ou raccourcis (1, 5, 10, 15, 30 min, 1 h) + la tâche. Plusieurs minuteurs en même temps, avec pause / reprise.
+- **⏱ Chrono** : démarrer, pause, tours, réinitialiser.
+
+Les rappels tournent en fond même si la fenêtre est fermée, et sont sauvegardés (un minuteur continue après un redémarrage de l'app).
+
+**Quand c'est l'heure**, pas de sonnerie : une alerte apparaît **au milieu de l'écran**, par-dessus tout, avec l'heure et la tâche. Elle arrive en « pop » puis grossit / rétrécit en continu pour bien se voir (la pulsation s'arrête quand la souris passe dessus pour cliquer facilement). Boutons **C'est fait ✓** (ou `Entrée` / `Échap`) et **Dans 5 min** pour la reporter.
+
+L'application tourne en fond dans la zone de notification (à côté de l'horloge). Clic droit sur le logo pour : nouveau post-it, afficher tous les post-its, rappels, lancer au démarrage, quitter.
 
 ## Lancer en développement
 
