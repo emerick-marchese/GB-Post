@@ -33,6 +33,10 @@ Les rappels tournent en fond même si la fenêtre est fermée, et sont sauvegard
 
 L'application tourne en fond dans la zone de notification (à côté de l'horloge). Clic droit sur le logo pour : nouveau post-it, afficher tous les post-its, rappels, lancer au démarrage, quitter.
 
+## Télécharger l'installateur
+
+L'installateur Windows est construit automatiquement par GitHub Actions à chaque mise à jour : onglet **Releases** du dépôt → **GB Post (dernière version)** → `GB-Post-Setup.exe`.
+
 ## Lancer en développement
 
 Il faut [Node.js](https://nodejs.org) (version 18 ou plus).
@@ -45,7 +49,7 @@ npm start
 ## Créer l'installateur
 
 ```bash
-npm run dist:win     # Windows  -> dist/GB Post Setup 1.0.0.exe
+npm run dist:win     # Windows  -> dist/GB-Post-Setup.exe
 npm run dist:mac     # macOS    -> dist/GB Post-1.0.0.dmg
 npm run dist:linux   # Linux    -> dist/GB Post-1.0.0.AppImage
 ```

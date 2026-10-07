@@ -1,0 +1,42 @@
+name: Installateur Windows
+
+on:
+  push:
+    branches: [claude/gb-post-app-fxfuqe, main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Construire l'installateur
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GB-Post-Setup
+          path: dist/*.exe
+
+      - name: Publier dans la release "GB Post"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: gb-post-latest
+          name: GB Post (dernière version)
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: |
+            Télécharge **GB-Post-Setup.exe** ci-dessous, puis double-clique dessus pour installer GB Post.
+            Construit à partir du commit ${{ github.sha }}.
+          files: dist/GB-Post-Setup.exe

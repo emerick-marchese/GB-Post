@@ -33,7 +33,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "GB Post"
+      "shortcutName": "GB Post",
+      "artifactName": "GB-Post-Setup.${ext}"
     },
     "mac": {
       "target": "dmg",
