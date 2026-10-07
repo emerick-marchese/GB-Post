@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>GB Post</title>
+  <link rel="stylesheet" href="note.css">
+</head>
+<body>
+  <header class="bar">
+    <img class="logo" src="../assets/icon.png" alt="">
+    <button id="btn-new" title="Nouveau post-it">＋</button>
+    <div class="spacer"></div>
+    <button id="btn-color" title="Changer la couleur">🎨</button>
+    <button id="btn-check" title="Ajouter une case à cocher">☑</button>
+    <button id="btn-pin" title="Toujours au premier plan">📌</button>
+    <button id="btn-delete" title="Supprimer le post-it">✕</button>
+  </header>
+
+  <div id="palette" class="palette" hidden>
+    <div id="swatches" class="swatches"></div>
+    <label class="custom" title="Couleur personnalisée">
+      Autre… <input id="custom-color" type="color">
+    </label>
+  </div>
+
+  <main class="content">
+    <textarea id="text" placeholder="Écris ici…" spellcheck="true"></textarea>
+    <ul id="checklist" class="checklist"></ul>
+    <button id="btn-add-item" class="add-item" hidden>＋ Ajouter un élément</button>
+  </main>
+
+  <footer class="status"><span id="progress"></span><span id="saved">Enregistré ✓</span></footer>
+
+  <script src="note.js"></script>
+</body>
+</html>
