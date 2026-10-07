@@ -317,6 +317,28 @@ window.gbpost.onChanged((updated) => {
 
 window.addEventListener('resize', growAll);
 
+// Poignée de redimensionnement : on suit la souris et on demande la nouvelle
+// taille au processus principal (les bords de la fenêtre marchent aussi).
+const grip = $('#grip');
+let resizeStart = null;
+let resizeFrame = null;
+grip.addEventListener('pointerdown', (e) => {
+  if (note?.pinned) return;
+  e.preventDefault();
+  grip.setPointerCapture(e.pointerId);
+  resizeStart = { x: e.screenX, y: e.screenY, w: window.outerWidth, h: window.outerHeight };
+});
+grip.addEventListener('pointermove', (e) => {
+  if (!resizeStart) return;
+  const w = resizeStart.w + (e.screenX - resizeStart.x);
+  const h = resizeStart.h + (e.screenY - resizeStart.y);
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => window.gbpost.resize(w, h));
+});
+const endResize = () => { resizeStart = null; };
+grip.addEventListener('pointerup', endResize);
+grip.addEventListener('pointercancel', endResize);
+
 // Raccourcis clavier
 document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;

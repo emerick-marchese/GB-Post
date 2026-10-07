@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('gbpost', {
   createNote: () => ipcRenderer.invoke('note:create'),
   deleteNote: () => ipcRenderer.invoke('note:delete'),
   hideNote: () => ipcRenderer.invoke('note:hide'),
+  resize: (width, height) => ipcRenderer.invoke('note:resize', width, height),
   openApp: () => ipcRenderer.invoke('note:open-app'),
   // Changements faits depuis la fenêtre principale (couleur, épinglage…).
   onChanged: (cb) => ipcRenderer.on('note:changed', (_e, note) => cb(note)),

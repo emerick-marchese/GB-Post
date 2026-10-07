@@ -102,11 +102,14 @@ body.pinned textarea { cursor: default; }
 .custom { margin-left: auto; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
 .custom input { width: 24px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; }
 
-/* Contenu */
+/* Contenu : la taille du texte suit la taille du post-it (14px pour un
+   post-it de 280 px de large, plus grand si on l'agrandit, plus petit si on
+   le rétrécit). Tout le contenu est en "em" pour suivre. */
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 10px 4px;
+  padding: .55em .7em .3em;
+  font-size: clamp(11px, calc(5px + 3.2vmin), 48px);
   user-select: text;
 }
 .content::-webkit-scrollbar { width: 8px; }
@@ -120,8 +123,8 @@ textarea {
   outline: none;
   resize: none;
   width: 100%;
-  min-height: 21px;
-  padding: 1px 0;
+  min-height: 1.5em;
+  padding: .05em 0;
   overflow: hidden;
   display: block;
 }
@@ -131,14 +134,14 @@ textarea::placeholder { color: var(--muted); }
 .title {
   display: block;
   width: 100%;
-  margin: 0 0 4px;
-  padding: 2px 0 4px 16px;
+  margin: 0 0 .25em;
+  padding: .1em 0 .2em calc(.56em + .32em);
   border: 0;
   border-bottom: 1px solid transparent;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 17px;
+  font-size: 1.25em;
   font-weight: 700;
   outline: none;
 }
@@ -148,11 +151,11 @@ body.pinned .title { padding-left: 0; cursor: default; }
 body.pinned .title.empty { display: none; }
 
 /* Blocs : paragraphes de texte et cases à cocher, dans n'importe quel ordre. */
-.blocks { display: flex; flex-direction: column; gap: 2px; }
+.blocks { display: flex; flex-direction: column; gap: .15em; }
 .block {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: .4em;
   border-radius: 4px;
   padding: 1px 0;
 }
@@ -163,20 +166,39 @@ body.pinned .block:hover { background: none; }
 .handle {
   cursor: grab;
   color: var(--muted);
-  font-size: 11px;
-  width: 10px;
+  font-size: .78em;
+  width: .9em;
   flex: none;
-  line-height: 21px;
+  line-height: 1.9em;
   visibility: hidden;
 }
 .block:hover .handle { visibility: visible; }
 .block input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: 3px 0 0;
+  appearance: none;
+  font-size: inherit; /* les champs de formulaire n'héritent pas de la taille par défaut */
+  position: relative;
+  width: 1.05em;
+  height: 1.05em;
+  margin: .23em 0 0;
   flex: none;
-  accent-color: color-mix(in srgb, var(--note) 40%, #000);
+  border: .1em solid color-mix(in srgb, var(--note) 35%, #000);
+  border-radius: .2em;
+  background: rgba(255, 255, 255, .55);
   cursor: pointer;
+}
+.block input[type="checkbox"]:checked {
+  background: color-mix(in srgb, var(--note) 35%, #000);
+}
+.block input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: .28em;
+  top: .08em;
+  width: .25em;
+  height: .5em;
+  border: solid #fff;
+  border-width: 0 .12em .12em 0;
+  transform: rotate(45deg);
 }
 .block.done textarea { text-decoration: line-through; color: var(--muted); }
 .block-del {
@@ -185,14 +207,14 @@ body.pinned .block:hover { background: none; }
   color: var(--muted);
   cursor: pointer;
   visibility: hidden;
-  font-size: 12px;
-  line-height: 21px;
+  font-size: .85em;
+  line-height: 1.75em;
   flex: none;
 }
 .block:hover .block-del { visibility: visible; }
 .block-del:hover { color: #c62828; }
 
-.add-row { display: flex; gap: 4px; margin: 6px 0 4px 12px; }
+.add-row { display: flex; flex-wrap: wrap; gap: .3em; margin: .4em 0 .3em .8em; }
 .add-row button {
   padding: 2px 6px;
   border: 0;
@@ -200,7 +222,7 @@ body.pinned .block:hover { background: none; }
   background: none;
   color: var(--muted);
   font: inherit;
-  font-size: 12px;
+  font-size: .85em;
   cursor: pointer;
 }
 .add-row button:hover { color: var(--ink); background: rgba(0, 0, 0, .06); }
@@ -208,7 +230,7 @@ body.pinned .block:hover { background: none; }
 .status {
   display: flex;
   justify-content: space-between;
-  padding: 0 8px 3px;
+  padding: 0 20px 3px 8px;
   height: 18px;
   font-size: 11px;
   color: var(--muted);
@@ -216,3 +238,20 @@ body.pinned .block:hover { background: none; }
 }
 #saved { opacity: 0; transition: opacity .3s; }
 #saved.show { opacity: 1; }
+
+/* Poignée de redimensionnement (coin en bas à droite) */
+.grip {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  z-index: 5;
+  background:
+    linear-gradient(135deg, transparent 0 45%, var(--muted) 45% 52%, transparent 52% 64%,
+      var(--muted) 64% 71%, transparent 71% 83%, var(--muted) 83% 90%, transparent 90%);
+  opacity: .55;
+}
+.grip:hover { opacity: 1; }
+body.pinned .grip { display: none; }

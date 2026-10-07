@@ -20,6 +20,7 @@ Fermer la fenêtre ne quitte pas GB Post : les post-its et les rappels restent a
 ### Les post-its sur le bureau
 
 - **Post-its sur le bureau** : chaque post-it est une petite fenêtre que tu déplaces (par la barre du haut) et redimensionnes (par les bords) où tu veux.
+- **Taille libre** : redimensionne un post-it par ses bords ou par la poignée en bas à droite. Le texte, le titre et les cases s'agrandissent ou rétrécissent avec le post-it.
 - **Titre** : chaque post-it a un champ titre en haut (affiché en gras, et dans la fenêtre GB Post).
 - **Texte libre + cases à cocher, mélangés** : écris normalement, et ajoute des cases à cocher où tu veux avec « ＋ Case à cocher » (`Ctrl+L`) ou « ＋ Texte » (`Ctrl+T`).
   - Dans une case : `Entrée` crée la case suivante ; `Entrée` sur une case vide repasse en texte normal.

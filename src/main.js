@@ -14,6 +14,7 @@ const APP_NAME = 'GB Post';
 const ASSETS = path.join(__dirname, '..', 'assets');
 const DEFAULT_COLOR = '#fff176';
 const DEFAULT_SIZE = { width: 280, height: 300 };
+const NOTE_MIN_SIZE = { width: 140, height: 100 };
 
 app.setName(APP_NAME);
 if (process.platform === 'win32') app.setAppUserModelId('com.gbpost.app');
@@ -120,8 +121,8 @@ function openNoteWindow(note) {
   const bounds = visibleBounds(note);
   const win = new BrowserWindow({
     ...bounds,
-    minWidth: 180,
-    minHeight: 140,
+    minWidth: NOTE_MIN_SIZE.width,
+    minHeight: NOTE_MIN_SIZE.height,
     frame: false,
     show: false,
     skipTaskbar: true,
@@ -401,6 +402,16 @@ ipcMain.handle('note:create', (event) => {
 ipcMain.handle('note:delete', (event) => {
   const id = noteIdOf(event);
   return id ? confirmDelete(id, windows.get(id)) : false;
+});
+
+ipcMain.handle('note:resize', (event, width, height) => {
+  const id = noteIdOf(event);
+  const win = id && windows.get(id);
+  if (!win || store.getNote(id)?.pinned) return;
+  const w = Math.round(Number(width));
+  const h = Math.round(Number(height));
+  if (!Number.isFinite(w) || !Number.isFinite(h)) return;
+  win.setSize(Math.max(NOTE_MIN_SIZE.width, w), Math.max(NOTE_MIN_SIZE.height, h));
 });
 
 ipcMain.handle('note:hide', (event) => {
