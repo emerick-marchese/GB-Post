@@ -35,16 +35,34 @@ jobs:
         shell: bash
         run: npm version "1.1.${{ github.run_number }}" --no-git-tag-version
 
-      - name: Construire et publier la version
-        run: npx electron-builder --win nsis --x64 --publish always
+      - name: Construire l'installateur
+        run: npx electron-builder --win nsis --x64 --publish never
 
       - uses: actions/upload-artifact@v4
         with:
           name: GB-Post-Setup
           path: dist/*.exe
 
-      # L'ancienne release sans numéro de version n'est plus utilisée.
-      - name: Nettoyer l'ancienne release
+      # Release versionnée avec latest.yml : c'est elle que lisent les copies
+      # installées pour se mettre à jour.
+      - name: Publier la release
+        shell: bash
+        run: |
+          VERSION="1.1.${{ github.run_number }}"
+          gh release create "v$VERSION" \
+            dist/GB-Post-Setup.exe dist/GB-Post-Setup.exe.blockmap dist/latest.yml \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "GB Post $VERSION" \
+            --notes "Télécharge **GB-Post-Setup.exe** ci-dessous et lance-le. Si GB Post est déjà installé, il est simplement mis à jour (tes post-its et rappels sont conservés). Les versions installées se mettent aussi à jour toutes seules." \
+            --latest
+
+      # Anciennes releases inutilisables : la release sans numéro de version et
+      # la v1.1.4 dont la publication a échoué à moitié.
+      - name: Nettoyer les anciennes releases
         shell: bash
         continue-on-error: true
-        run: gh release delete gb-post-latest --cleanup-tag --yes --repo "${{ github.repository }}"
+        run: |
+          for tag in gb-post-latest v1.1.4; do
+            gh release delete "$tag" --cleanup-tag --yes --repo "${{ github.repository }}" || true
+          done
