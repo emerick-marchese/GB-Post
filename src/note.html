@@ -8,13 +8,15 @@
 </head>
 <body>
   <header class="bar">
-    <img class="logo" src="../assets/icon.png" alt="">
-    <button id="btn-new" title="Nouveau post-it">＋</button>
-    <div class="spacer"></div>
-    <button id="btn-color" title="Changer la couleur">🎨</button>
-    <button id="btn-check" title="Ajouter une case à cocher">☑</button>
-    <button id="btn-pin" title="Toujours au premier plan">📌</button>
-    <button id="btn-delete" title="Supprimer le post-it">✕</button>
+    <img class="logo" src="../assets/icon.png" alt="GB Post">
+    <div class="tools">
+      <button id="btn-new" title="Nouveau post-it (Ctrl+N)">＋</button>
+      <div class="spacer"></div>
+      <button id="btn-color" title="Changer la couleur">🎨</button>
+      <button id="btn-pin" title="Épingler sur le bureau">📌</button>
+      <button id="btn-delete" title="Supprimer le post-it">✕</button>
+    </div>
+    <button id="btn-edit" class="edit" title="Modifier">✏️</button>
   </header>
 
   <div id="palette" class="palette" hidden>
@@ -24,10 +26,12 @@
     </label>
   </div>
 
-  <main class="content">
-    <textarea id="text" placeholder="Écris ici…" spellcheck="true"></textarea>
-    <ul id="checklist" class="checklist"></ul>
-    <button id="btn-add-item" class="add-item" hidden>＋ Ajouter un élément</button>
+  <main id="content" class="content">
+    <div id="blocks" class="blocks"></div>
+    <div class="add-row">
+      <button id="btn-add-text" title="Ajouter un paragraphe (Ctrl+T)">＋ Texte</button>
+      <button id="btn-add-check" title="Ajouter une case à cocher (Ctrl+L)">＋ Case à cocher</button>
+    </div>
   </main>
 
   <footer class="status"><span id="progress"></span><span id="saved">Enregistré ✓</span></footer>

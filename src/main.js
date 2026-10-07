@@ -91,7 +91,24 @@ function visibleBounds(note) {
   return bounds;
 }
 
+// Anciennes notes (texte + checklist séparés) -> liste de blocs mélangés.
+function migrateNote(note) {
+  if (Array.isArray(note.blocks)) return;
+  const blocks = [];
+  if (note.text) blocks.push({ id: newId(), type: 'text', text: note.text });
+  for (const item of note.checklist || []) {
+    blocks.push({ id: item.id || newId(), type: 'check', text: item.text || '', done: !!item.done });
+  }
+  if (blocks.length === 0) blocks.push({ id: newId(), type: 'text', text: '' });
+  note.blocks = blocks;
+  delete note.text;
+  delete note.checklist;
+  note.pinned = false;
+  store.save();
+}
+
 function openNoteWindow(note) {
+  migrateNote(note);
   const bounds = visibleBounds(note);
   const win = new BrowserWindow({
     ...bounds,
@@ -100,7 +117,9 @@ function openNoteWindow(note) {
     frame: false,
     show: false,
     skipTaskbar: true,
-    alwaysOnTop: !!note.pinned,
+    // Un post-it épinglé est figé sur le bureau : ni déplaçable ni redimensionnable.
+    movable: !note.pinned,
+    resizable: !note.pinned,
     backgroundColor: note.color || DEFAULT_COLOR,
     title: APP_NAME,
     icon: path.join(ASSETS, 'icon.png'),
@@ -135,8 +154,7 @@ function createNote(near) {
   const note = {
     id: newId(),
     color: DEFAULT_COLOR,
-    text: '',
-    checklist: [],
+    blocks: [{ id: newId(), type: 'text', text: '' }],
     pinned: false,
     width: DEFAULT_SIZE.width,
     height: DEFAULT_SIZE.height,
@@ -210,7 +228,7 @@ ipcMain.handle('note:update', (event, patch) => {
   const id = noteIdOf(event);
   if (!id || !patch || typeof patch !== 'object') return null;
   const allowed = {};
-  for (const key of ['text', 'checklist', 'color']) {
+  for (const key of ['blocks', 'color']) {
     if (key in patch) allowed[key] = patch[key];
   }
   const note = store.updateNote(id, allowed);
@@ -224,7 +242,9 @@ ipcMain.handle('note:toggle-pin', (event) => {
   if (!note) return false;
   const pinned = !note.pinned;
   store.updateNote(id, { pinned });
-  windows.get(id)?.setAlwaysOnTop(pinned);
+  const win = windows.get(id);
+  win?.setMovable(!pinned);
+  win?.setResizable(!pinned);
   return pinned;
 });
 
@@ -241,7 +261,7 @@ ipcMain.handle('note:delete', async (event) => {
   const note = id && store.getNote(id);
   const win = id && windows.get(id);
   if (!note || !win) return false;
-  const isEmpty = !note.text?.trim() && !(note.checklist || []).some((i) => i.text?.trim());
+  const isEmpty = !(note.blocks || []).some((b) => b.text?.trim());
   if (!isEmpty) {
     const { response } = await dialog.showMessageBox(win, {
       type: 'question',

@@ -7,13 +7,16 @@ Des post-its à poser sur ton bureau (Windows, macOS, Linux).
 ## Fonctionnalités
 
 - **Post-its sur le bureau** : chaque post-it est une petite fenêtre que tu déplaces (par la barre du haut) et redimensionnes (par les bords) où tu veux.
-- **Checklists** : bouton ☑ (ou `Ctrl+L`) pour ajouter une case à cocher.
-  `Entrée` crée l'élément suivant, `Retour arrière` sur un élément vide le supprime, `⋮⋮` permet de les réordonner par glisser-déposer. Le compteur en bas indique la progression (ex. `2/5 faits`).
+- **Texte libre + cases à cocher, mélangés** : écris normalement, et ajoute des cases à cocher où tu veux avec « ＋ Case à cocher » (`Ctrl+L`) ou « ＋ Texte » (`Ctrl+T`).
+  - Dans une case : `Entrée` crée la case suivante ; `Entrée` sur une case vide repasse en texte normal.
+  - `Retour arrière` au début d'une case la retransforme en texte.
+  - Taper `[] ` ou `- ` au début d'une ligne la transforme en case à cocher.
+  - `⋮⋮` permet de déplacer un élément par glisser-déposer. Le compteur en bas indique la progression (ex. `2/5 faits`).
+- **📌 Épingler sur le bureau** : le post-it devient tout simple, sans aucun bouton, juste le logo et ton contenu, et il ne bouge plus. Les cases restent cochables. Passe la souris dessus : un **crayon ✏️** apparaît pour repasser en mode modification.
 - **Couleurs** : bouton 🎨 → 10 couleurs prêtes + « Autre… » pour n'importe quelle couleur.
 - **Nouveau post-it** : bouton ＋ (ou `Ctrl+N`), ou double-clic sur l'icône GB Post dans la zone de notification.
-- **📌 Toujours au premier plan** pour un post-it important.
 - **✕ Supprimer** (confirmation demandée si le post-it n'est pas vide).
-- **Sauvegarde automatique à chaque changement** : texte, cases cochées, couleur, position et taille. Rien à enregistrer à la main ; tout est restauré au prochain lancement.
+- **Sauvegarde automatique à chaque changement** : texte, cases cochées, couleur, épinglage, position et taille. Rien à enregistrer à la main ; tout est restauré au prochain lancement.
 - **Actif au démarrage** : GB Post se lance tout seul à l'ouverture de session (désactivable via clic droit sur l'icône de la zone de notification → « Lancer au démarrage »).
 
 L'application tourne en fond dans la zone de notification (à côté de l'horloge). Clic droit sur le logo pour : nouveau post-it, afficher tous les post-its, lancer au démarrage, quitter.

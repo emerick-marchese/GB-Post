@@ -29,14 +29,14 @@ body {
   -webkit-app-region: drag;
   display: flex;
   align-items: center;
-  gap: 2px;
   height: 30px;
   padding: 0 4px;
   background: var(--bar);
   flex: none;
 }
-.bar .logo { width: 20px; height: 20px; margin: 0 4px 0 2px; }
-.bar .spacer { flex: 1; }
+.bar .logo { width: 20px; height: 20px; margin: 0 4px 0 2px; flex: none; }
+.tools { display: flex; align-items: center; gap: 2px; flex: 1; }
+.tools .spacer { flex: 1; }
 .bar button {
   -webkit-app-region: no-drag;
   width: 26px;
@@ -52,6 +52,30 @@ body {
 .bar button:hover { background: rgba(0, 0, 0, .12); opacity: 1; }
 .bar button.active { background: rgba(0, 0, 0, .2); opacity: 1; }
 #btn-delete:hover { background: #d32f2f; color: #fff; }
+
+/* Crayon : visible uniquement sur un post-it épinglé, au survol. */
+.bar .edit {
+  display: none;
+  margin-left: auto;
+  background: rgba(255, 255, 255, .55);
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+/* ----- Post-it épinglé : affichage épuré, juste le logo et le contenu ----- */
+body.pinned .bar { -webkit-app-region: no-drag; background: transparent; }
+body.pinned .tools,
+body.pinned .palette,
+body.pinned .add-row,
+body.pinned .status,
+body.pinned .handle,
+body.pinned .block-del,
+body.pinned .block.empty { display: none; }
+body.pinned .bar .edit { display: block; }
+body.pinned:hover .bar .edit { opacity: 1; }
+body.pinned .bar .edit:hover { background: #fff; }
+body.pinned .content { padding-top: 2px; user-select: none; }
+body.pinned textarea { cursor: default; }
 
 /* Palette de couleurs */
 .palette {
@@ -87,7 +111,7 @@ body {
 .content::-webkit-scrollbar { width: 8px; }
 .content::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .2); border-radius: 4px; }
 
-textarea, .item-text {
+textarea {
   font: inherit;
   color: inherit;
   background: transparent;
@@ -95,57 +119,70 @@ textarea, .item-text {
   outline: none;
   resize: none;
   width: 100%;
+  min-height: 21px;
+  padding: 1px 0;
+  overflow: hidden;
+  display: block;
 }
-textarea { min-height: 24px; overflow: hidden; display: block; }
-textarea::placeholder, .item-text::placeholder { color: var(--muted); }
+textarea::placeholder { color: var(--muted); }
 
-/* Checklist */
-.checklist { list-style: none; margin: 4px 0 0; padding: 0; }
-.checklist li {
+/* Blocs : paragraphes de texte et cases à cocher, dans n'importe quel ordre. */
+.blocks { display: flex; flex-direction: column; gap: 2px; }
+.block {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  padding: 2px 0;
   border-radius: 4px;
+  padding: 1px 0;
 }
-.checklist li:hover { background: rgba(0, 0, 0, .05); }
-.checklist li.dragging { opacity: .4; }
-.checklist li.drop-before { box-shadow: 0 -2px 0 var(--ink); }
-.handle { cursor: grab; color: var(--muted); font-size: 11px; width: 10px; visibility: hidden; }
-.checklist li:hover .handle { visibility: visible; }
-.checklist input[type="checkbox"] {
+.block:hover { background: rgba(0, 0, 0, .04); }
+body.pinned .block:hover { background: none; }
+.block.dragging { opacity: .4; }
+.block.drop-before { box-shadow: 0 -2px 0 var(--ink); }
+.handle {
+  cursor: grab;
+  color: var(--muted);
+  font-size: 11px;
+  width: 10px;
+  flex: none;
+  line-height: 21px;
+  visibility: hidden;
+}
+.block:hover .handle { visibility: visible; }
+.block input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  margin: 0;
+  margin: 3px 0 0;
   flex: none;
   accent-color: color-mix(in srgb, var(--note) 40%, #000);
   cursor: pointer;
 }
-.item-text { flex: 1; padding: 2px 0; }
-li.done .item-text { text-decoration: line-through; color: var(--muted); }
-.item-del {
+.block.done textarea { text-decoration: line-through; color: var(--muted); }
+.block-del {
   border: 0;
   background: none;
   color: var(--muted);
   cursor: pointer;
   visibility: hidden;
   font-size: 12px;
+  line-height: 21px;
+  flex: none;
 }
-.checklist li:hover .item-del { visibility: visible; }
-.item-del:hover { color: #c62828; }
+.block:hover .block-del { visibility: visible; }
+.block-del:hover { color: #c62828; }
 
-.add-item {
-  margin: 4px 0 6px 16px;
-  padding: 2px 4px;
+.add-row { display: flex; gap: 4px; margin: 6px 0 4px 12px; }
+.add-row button {
+  padding: 2px 6px;
   border: 0;
+  border-radius: 4px;
   background: none;
   color: var(--muted);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
 }
-.add-item:hover { color: var(--ink); }
-.add-item[hidden] { display: none; }
+.add-row button:hover { color: var(--ink); background: rgba(0, 0, 0, .06); }
 
 .status {
   display: flex;

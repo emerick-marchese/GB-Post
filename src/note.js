@@ -1,4 +1,5 @@
-// Interface d'un post-it : texte libre, checklist et couleur.
+// Interface d'un post-it : du texte libre et des cases à cocher, mélangés dans
+// l'ordre qu'on veut, plus la couleur et le mode épinglé.
 // Chaque changement est envoyé immédiatement au processus principal qui l'enregistre.
 
 const COLORS = [
@@ -15,18 +16,17 @@ const COLORS = [
 ];
 
 const $ = (sel) => document.querySelector(sel);
-const textEl = $('#text');
-const listEl = $('#checklist');
-const addItemBtn = $('#btn-add-item');
+const blocksEl = $('#blocks');
 const paletteEl = $('#palette');
 const swatchesEl = $('#swatches');
 const customColorEl = $('#custom-color');
-const pinBtn = $('#btn-pin');
+const colorBtn = $('#btn-color');
 const progressEl = $('#progress');
 const savedEl = $('#saved');
 
 let note = null;
 let savedTimer = null;
+let focusedIndex = -1;
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -40,8 +40,8 @@ async function save(patch) {
   savedTimer = setTimeout(() => savedEl.classList.remove('show'), 1200);
 }
 
-function saveChecklist() {
-  save({ checklist: note.checklist });
+function saveBlocks() {
+  save({ blocks: note.blocks });
   renderProgress();
 }
 
@@ -73,164 +73,239 @@ function buildPalette() {
   customColorEl.addEventListener('input', () => setColor(customColorEl.value));
 }
 
-// ---------- Texte ----------
-
-function autoGrow() {
-  textEl.style.height = 'auto';
-  textEl.style.height = `${textEl.scrollHeight}px`;
+function closePalette() {
+  paletteEl.hidden = true;
+  colorBtn.classList.remove('active');
 }
 
-textEl.addEventListener('input', () => {
-  autoGrow();
-  save({ text: textEl.value });
-});
+// ---------- Mode épinglé ----------
 
-// ---------- Checklist ----------
+function applyPinned(pinned) {
+  note.pinned = pinned;
+  document.body.classList.toggle('pinned', pinned);
+  for (const ta of blocksEl.querySelectorAll('textarea')) ta.readOnly = pinned;
+  if (pinned) {
+    closePalette();
+    document.activeElement?.blur();
+  }
+  requestAnimationFrame(growAll);
+}
+
+async function togglePinned() {
+  applyPinned(await window.gbpost.togglePin());
+}
+
+// ---------- Blocs (texte / case à cocher) ----------
+
+function grow(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = `${ta.scrollHeight}px`;
+}
+
+function growAll() {
+  for (const ta of blocksEl.querySelectorAll('textarea')) grow(ta);
+}
 
 function renderProgress() {
-  const items = note.checklist || [];
-  const done = items.filter((i) => i.done).length;
-  progressEl.textContent = items.length ? `${done}/${items.length} fait${done > 1 ? 's' : ''}` : '';
+  const checks = note.blocks.filter((b) => b.type === 'check');
+  const done = checks.filter((b) => b.done).length;
+  progressEl.textContent = checks.length ? `${done}/${checks.length} fait${done > 1 ? 's' : ''}` : '';
 }
 
-function focusItem(index, atEnd = true) {
-  const input = listEl.children[index]?.querySelector('.item-text');
-  if (!input) return;
-  input.focus();
-  const pos = atEnd ? input.value.length : 0;
-  input.setSelectionRange(pos, pos);
+function focusBlock(index, caret = 'end') {
+  const ta = blocksEl.children[index]?.querySelector('textarea');
+  if (!ta) return;
+  ta.focus();
+  const pos = caret === 'start' ? 0 : ta.value.length;
+  ta.setSelectionRange(pos, pos);
 }
 
-function addItem(afterIndex = note.checklist.length - 1, text = '') {
-  const item = { id: uid(), text, done: false };
-  note.checklist.splice(afterIndex + 1, 0, item);
-  saveChecklist();
-  renderChecklist();
-  focusItem(afterIndex + 1);
+function insertBlock(type, afterIndex = note.blocks.length - 1, text = '') {
+  const block = { id: uid(), type, text };
+  if (type === 'check') block.done = false;
+  note.blocks.splice(afterIndex + 1, 0, block);
+  saveBlocks();
+  renderBlocks();
+  focusBlock(afterIndex + 1, 'start');
 }
 
-function removeItem(index, focusPrevious = false) {
-  note.checklist.splice(index, 1);
-  saveChecklist();
-  renderChecklist();
-  if (focusPrevious) {
-    if (index > 0) focusItem(index - 1);
-    else textEl.focus();
-  }
+function removeBlock(index, focusPrevious = false) {
+  note.blocks.splice(index, 1);
+  if (note.blocks.length === 0) note.blocks.push({ id: uid(), type: 'text', text: '' });
+  saveBlocks();
+  renderBlocks();
+  if (focusPrevious) focusBlock(Math.max(0, index - 1));
+}
+
+function setType(index, type) {
+  const block = note.blocks[index];
+  block.type = type;
+  if (type === 'check') block.done = false;
+  else delete block.done;
+  saveBlocks();
+  renderBlocks();
+  focusBlock(index, 'start');
+}
+
+// Ajoute un bloc juste après celui où se trouve le curseur (ou à la fin).
+function addBlock(type) {
+  if (note.pinned) return;
+  const at = focusedIndex >= 0 && focusedIndex < note.blocks.length ? focusedIndex : note.blocks.length - 1;
+  const current = note.blocks[at];
+  // Un paragraphe vide est simplement transformé plutôt que d'empiler du vide.
+  if (current && !current.text && current.type !== type) setType(at, type);
+  else insertBlock(type, at);
 }
 
 let dragIndex = null;
 
-function renderChecklist() {
-  listEl.textContent = '';
-  note.checklist.forEach((item, index) => {
-    const li = document.createElement('li');
-    li.classList.toggle('done', item.done);
+function renderBlocks() {
+  blocksEl.textContent = '';
+  note.blocks.forEach((block, index) => {
+    const row = document.createElement('div');
+    row.className = `block ${block.type}`;
+    row.classList.toggle('done', !!block.done);
+    row.classList.toggle('empty', !block.text.trim());
 
     const handle = document.createElement('span');
     handle.className = 'handle';
     handle.textContent = '⋮⋮';
-    handle.title = 'Glisser pour réordonner';
+    handle.title = 'Glisser pour déplacer';
     handle.draggable = true;
     handle.addEventListener('dragstart', (e) => {
       dragIndex = index;
-      li.classList.add('dragging');
+      row.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setDragImage(li, 10, 10);
+      e.dataTransfer.setDragImage(row, 10, 10);
     });
     handle.addEventListener('dragend', () => {
       dragIndex = null;
-      renderChecklist();
+      renderBlocks();
     });
-    li.addEventListener('dragover', (e) => {
+    row.addEventListener('dragover', (e) => {
       if (dragIndex === null) return;
       e.preventDefault();
-      for (const el of listEl.children) el.classList.remove('drop-before');
-      li.classList.add('drop-before');
+      for (const el of blocksEl.children) el.classList.remove('drop-before');
+      row.classList.add('drop-before');
     });
-    li.addEventListener('drop', (e) => {
+    row.addEventListener('drop', (e) => {
       e.preventDefault();
       if (dragIndex === null || dragIndex === index) return;
-      const [moved] = note.checklist.splice(dragIndex, 1);
-      note.checklist.splice(dragIndex < index ? index - 1 : index, 0, moved);
+      const [moved] = note.blocks.splice(dragIndex, 1);
+      note.blocks.splice(dragIndex < index ? index - 1 : index, 0, moved);
       dragIndex = null;
-      saveChecklist();
-      renderChecklist();
+      saveBlocks();
+      renderBlocks();
     });
+    row.append(handle);
 
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.checked = !!item.done;
-    box.addEventListener('change', () => {
-      item.done = box.checked;
-      li.classList.toggle('done', item.done);
-      saveChecklist();
-    });
+    if (block.type === 'check') {
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = !!block.done;
+      // Cocher reste possible même quand le post-it est épinglé.
+      box.addEventListener('change', () => {
+        block.done = box.checked;
+        row.classList.toggle('done', block.done);
+        saveBlocks();
+      });
+      row.append(box);
+    }
 
-    const input = document.createElement('input');
-    input.className = 'item-text';
-    input.type = 'text';
-    input.value = item.text;
-    input.placeholder = 'Élément…';
-    input.addEventListener('input', () => {
-      item.text = input.value;
-      saveChecklist();
+    const ta = document.createElement('textarea');
+    ta.rows = 1;
+    ta.value = block.text;
+    ta.readOnly = !!note.pinned;
+    ta.spellcheck = true;
+    ta.placeholder = block.type === 'check' ? 'Élément…' : (index === 0 ? 'Écris ici…' : '');
+    ta.addEventListener('focus', () => { focusedIndex = index; });
+    ta.addEventListener('input', () => {
+      // Raccourci : taper "[] " ou "- " au début d'un paragraphe en fait une case à cocher.
+      if (block.type === 'text' && /^(\[ ?\]|-) $/.test(ta.value)) {
+        block.text = '';
+        setType(index, 'check');
+        return;
+      }
+      block.text = ta.value;
+      row.classList.toggle('empty', !block.text.trim());
+      grow(ta);
+      saveBlocks();
     });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    ta.addEventListener('keydown', (e) => {
+      if (note.pinned) return;
+      const atStart = ta.selectionStart === 0 && ta.selectionEnd === 0;
+      if (block.type === 'check' && e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        // Coupe le texte au curseur, comme dans un éditeur classique.
-        const tail = input.value.slice(input.selectionEnd);
-        item.text = input.value.slice(0, input.selectionStart);
-        addItem(index, tail);
-        focusItem(index + 1, false);
-      } else if (e.key === 'Backspace' && input.value === '') {
+        // Entrée sur une case vide : on sort de la liste et on repasse en texte normal.
+        if (!ta.value) { setType(index, 'text'); return; }
+        const tail = ta.value.slice(ta.selectionEnd);
+        block.text = ta.value.slice(0, ta.selectionStart);
+        insertBlock('check', index, tail);
+      } else if (e.key === 'Backspace' && atStart) {
+        if (block.type === 'check') {
+          e.preventDefault();
+          setType(index, 'text');
+        } else if (!ta.value && note.blocks.length > 1) {
+          e.preventDefault();
+          removeBlock(index, true);
+        }
+      } else if (e.key === 'ArrowUp' && index > 0 && !ta.value.slice(0, ta.selectionStart).includes('\n')) {
         e.preventDefault();
-        removeItem(index, true);
-      } else if (e.key === 'ArrowUp' && index > 0) {
+        focusBlock(index - 1);
+      } else if (e.key === 'ArrowDown' && index < note.blocks.length - 1 && !ta.value.slice(ta.selectionEnd).includes('\n')) {
         e.preventDefault();
-        focusItem(index - 1);
-      } else if (e.key === 'ArrowDown' && index < note.checklist.length - 1) {
-        e.preventDefault();
-        focusItem(index + 1);
+        focusBlock(index + 1);
       }
     });
+    row.append(ta);
 
     const del = document.createElement('button');
-    del.className = 'item-del';
+    del.className = 'block-del';
     del.textContent = '✕';
-    del.title = 'Supprimer cet élément';
-    del.addEventListener('click', () => removeItem(index));
+    del.title = 'Supprimer';
+    del.addEventListener('click', () => removeBlock(index));
+    row.append(del);
 
-    li.append(handle, box, input, del);
-    listEl.appendChild(li);
+    blocksEl.appendChild(row);
   });
-  addItemBtn.hidden = note.checklist.length === 0;
   renderProgress();
+  requestAnimationFrame(growAll);
 }
 
-addItemBtn.addEventListener('click', () => addItem());
+// Clic dans le vide sous le contenu : on écrit à la suite.
+$('#content').addEventListener('mousedown', (e) => {
+  if (note.pinned || e.target.id !== 'content') return;
+  e.preventDefault();
+  const last = note.blocks[note.blocks.length - 1];
+  if (last.type === 'text' && !last.text) focusBlock(note.blocks.length - 1);
+  else insertBlock('text');
+});
 
 // ---------- Barre d'outils ----------
 
 $('#btn-new').addEventListener('click', () => window.gbpost.createNote());
-$('#btn-check').addEventListener('click', () => addItem());
-$('#btn-color').addEventListener('click', () => {
+$('#btn-add-text').addEventListener('click', () => addBlock('text'));
+$('#btn-add-check').addEventListener('click', () => addBlock('check'));
+// Les boutons "Ajouter" ne doivent pas faire perdre la position du curseur.
+for (const b of document.querySelectorAll('.add-row button')) b.addEventListener('mousedown', (e) => e.preventDefault());
+colorBtn.addEventListener('click', () => {
   paletteEl.hidden = !paletteEl.hidden;
-  $('#btn-color').classList.toggle('active', !paletteEl.hidden);
+  colorBtn.classList.toggle('active', !paletteEl.hidden);
 });
-pinBtn.addEventListener('click', async () => {
-  const pinned = await window.gbpost.togglePin();
-  pinBtn.classList.toggle('active', pinned);
-});
+$('#btn-pin').addEventListener('click', togglePinned);
+$('#btn-edit').addEventListener('click', togglePinned);
 $('#btn-delete').addEventListener('click', () => window.gbpost.deleteNote());
+
+window.addEventListener('resize', growAll);
 
 // Raccourcis clavier
 document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
-  if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); window.gbpost.createNote(); }
-  if (mod && e.key.toLowerCase() === 'l') { e.preventDefault(); addItem(); }
-  if (e.key === 'Escape' && !paletteEl.hidden) $('#btn-color').click();
+  const key = e.key.toLowerCase();
+  if (mod && key === 'n') { e.preventDefault(); window.gbpost.createNote(); }
+  if (mod && key === 'l') { e.preventDefault(); addBlock('check'); }
+  if (mod && key === 't') { e.preventDefault(); addBlock('text'); }
+  if (e.key === 'Escape' && !paletteEl.hidden) closePalette();
 });
 
 // ---------- Démarrage ----------
@@ -239,13 +314,13 @@ async function init() {
   buildPalette();
   note = await window.gbpost.getNote();
   if (!note) return;
-  note.checklist = Array.isArray(note.checklist) ? note.checklist : [];
+  if (!Array.isArray(note.blocks) || note.blocks.length === 0) {
+    note.blocks = [{ id: uid(), type: 'text', text: '' }];
+  }
   applyColor(note.color || COLORS[0]);
-  textEl.value = note.text || '';
-  pinBtn.classList.toggle('active', !!note.pinned);
-  renderChecklist();
-  requestAnimationFrame(autoGrow);
-  if (!note.text && note.checklist.length === 0) textEl.focus();
+  renderBlocks();
+  applyPinned(!!note.pinned);
+  if (!note.pinned && note.blocks.length === 1 && !note.blocks[0].text) focusBlock(0);
 }
 
 init();
