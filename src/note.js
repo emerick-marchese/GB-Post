@@ -84,13 +84,12 @@ function closePalette() {
 function applyPinned(pinned) {
   note.pinned = pinned;
   document.body.classList.toggle('pinned', pinned);
-  for (const ta of blocksEl.querySelectorAll('textarea')) ta.readOnly = pinned;
+  for (const ed of blocksEl.querySelectorAll('.editor')) ed.contentEditable = pinned ? 'false' : 'true';
   titleEl.readOnly = pinned;
   if (pinned) {
     closePalette();
     document.activeElement?.blur();
   }
-  requestAnimationFrame(growAll);
 }
 
 async function togglePinned() {
@@ -98,15 +97,8 @@ async function togglePinned() {
 }
 
 // ---------- Blocs (texte / case à cocher) ----------
-
-function grow(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = `${ta.scrollHeight}px`;
-}
-
-function growAll() {
-  for (const ta of blocksEl.querySelectorAll('textarea')) grow(ta);
-}
+// Chaque bloc est une zone de texte mis en forme (gras, italique, souligné),
+// alignable à gauche, au centre ou à droite.
 
 function renderProgress() {
   const checks = note.blocks.filter((b) => b.type === 'check');
@@ -114,16 +106,50 @@ function renderProgress() {
   progressEl.textContent = checks.length ? `${done}/${checks.length} fait${done > 1 ? 's' : ''}` : '';
 }
 
-function focusBlock(index, caret = 'end') {
-  const ta = blocksEl.children[index]?.querySelector('textarea');
-  if (!ta) return;
-  ta.focus();
-  const pos = caret === 'start' ? 0 : ta.value.length;
-  ta.setSelectionRange(pos, pos);
+function editorOf(index) {
+  return blocksEl.children[index]?.querySelector('.editor');
 }
 
-function insertBlock(type, afterIndex = note.blocks.length - 1, text = '') {
-  const block = { id: uid(), type, text };
+function placeCaret(ed, atStart) {
+  ed.focus();
+  const r = document.createRange();
+  r.selectNodeContents(ed);
+  r.collapse(atStart);
+  const sel = getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+}
+
+function focusBlock(index, caret = 'end') {
+  const ed = editorOf(index);
+  if (ed) placeCaret(ed, caret === 'start');
+}
+
+// Le curseur est-il tout au début / tout à la fin de la zone ?
+function caretEdges(ed) {
+  const sel = getSelection();
+  if (!sel.rangeCount) return { atStart: false, atEnd: false };
+  const r = sel.getRangeAt(0);
+  if (!r.collapsed || !ed.contains(r.startContainer)) return { atStart: false, atEnd: false };
+  const before = document.createRange();
+  before.selectNodeContents(ed);
+  before.setEnd(r.startContainer, r.startOffset);
+  const after = document.createRange();
+  after.selectNodeContents(ed);
+  after.setStart(r.endContainer, r.endOffset);
+  const empty = (range) => range.toString().length === 0 && !range.cloneContents().querySelector('br:not(:last-child)');
+  return { atStart: empty(before), atEnd: empty(after) };
+}
+
+// Recopie le contenu de la zone dans le bloc (HTML nettoyé + texte brut).
+function syncBlock(block, ed) {
+  if (ed.textContent === '' && ed.innerHTML !== '') ed.innerHTML = ''; // garde le texte d'aide visible
+  block.html = GBRich.sanitize(ed.innerHTML);
+  block.text = GBRich.toText(block.html);
+}
+
+function insertBlock(type, afterIndex = note.blocks.length - 1, html = '') {
+  const block = { id: uid(), type, html, text: GBRich.toText(html) };
   if (type === 'check') block.done = false;
   note.blocks.splice(afterIndex + 1, 0, block);
   saveBlocks();
@@ -133,7 +159,7 @@ function insertBlock(type, afterIndex = note.blocks.length - 1, text = '') {
 
 function removeBlock(index, focusPrevious = false) {
   note.blocks.splice(index, 1);
-  if (note.blocks.length === 0) note.blocks.push({ id: uid(), type: 'text', text: '' });
+  if (note.blocks.length === 0) note.blocks.push({ id: uid(), type: 'text', text: '', html: '' });
   saveBlocks();
   renderBlocks();
   if (focusPrevious) focusBlock(Math.max(0, index - 1));
@@ -167,7 +193,7 @@ function renderBlocks() {
     const row = document.createElement('div');
     row.className = `block ${block.type}`;
     row.classList.toggle('done', !!block.done);
-    row.classList.toggle('empty', !block.text.trim());
+    row.classList.toggle('empty', !(block.text || '').trim());
 
     const handle = document.createElement('span');
     handle.className = 'handle';
@@ -214,55 +240,72 @@ function renderBlocks() {
       row.append(box);
     }
 
-    const ta = document.createElement('textarea');
-    ta.rows = 1;
-    ta.value = block.text;
-    ta.readOnly = !!note.pinned;
-    ta.spellcheck = true;
-    ta.placeholder = block.type === 'check' ? 'Élément…' : (index === 0 ? 'Écris ici…' : '');
-    ta.addEventListener('focus', () => { focusedIndex = index; });
-    ta.addEventListener('input', () => {
+    const ed = document.createElement('div');
+    ed.className = 'editor';
+    ed.contentEditable = note.pinned ? 'false' : 'true';
+    ed.spellcheck = true;
+    ed.innerHTML = GBRich.blockHtml(block);
+    ed.style.textAlign = GBRich.align(block.align);
+    ed.dataset.placeholder = block.type === 'check' ? 'Élément…' : (index === 0 ? 'Écris ici…' : '');
+    ed.addEventListener('focus', () => { focusedIndex = index; });
+    ed.addEventListener('input', () => {
       // Raccourci : taper "[] " ou "- " au début d'un paragraphe en fait une case à cocher.
-      if (block.type === 'text' && /^(\[ ?\]|-) $/.test(ta.value)) {
+      if (block.type === 'text' && /^(\[ ?\]|-) $/.test(ed.textContent.replace(/ /g, ' '))) {
+        block.html = '';
         block.text = '';
         setType(index, 'check');
         return;
       }
-      block.text = ta.value;
+      syncBlock(block, ed);
       row.classList.toggle('empty', !block.text.trim());
-      grow(ta);
       saveBlocks();
     });
-    ta.addEventListener('keydown', (e) => {
+    // Coller : on garde seulement le texte (la mise en forme du site d'origine est ignorée).
+    ed.addEventListener('paste', (e) => {
+      e.preventDefault();
+      document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+    });
+    ed.addEventListener('keydown', (e) => {
       if (note.pinned) return;
-      const atStart = ta.selectionStart === 0 && ta.selectionEnd === 0;
-      if (block.type === 'check' && e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter') {
         e.preventDefault();
+        if (block.type !== 'check' || e.shiftKey) {
+          document.execCommand('insertLineBreak');
+          return;
+        }
         // Entrée sur une case vide : on sort de la liste et on repasse en texte normal.
-        if (!ta.value) { setType(index, 'text'); return; }
-        const tail = ta.value.slice(ta.selectionEnd);
-        block.text = ta.value.slice(0, ta.selectionStart);
-        insertBlock('check', index, tail);
-      } else if (e.key === 'Backspace' && atStart) {
+        if (!ed.textContent) { setType(index, 'text'); return; }
+        // Coupe la case au curseur : la fin (avec sa mise en forme) passe dans une nouvelle case.
+        const sel = getSelection();
+        const r = sel.getRangeAt(0);
+        r.deleteContents();
+        const tail = document.createRange();
+        tail.setStart(r.startContainer, r.startOffset);
+        tail.setEnd(ed, ed.childNodes.length);
+        const box = document.createElement('div');
+        box.append(tail.extractContents());
+        syncBlock(block, ed);
+        insertBlock('check', index, GBRich.sanitize(box.innerHTML));
+        return;
+      }
+      const { atStart, atEnd } = caretEdges(ed);
+      if (e.key === 'Backspace' && atStart) {
         if (block.type === 'check') {
           e.preventDefault();
           setType(index, 'text');
-        } else if (!ta.value && note.blocks.length > 1) {
+        } else if (!ed.textContent && note.blocks.length > 1) {
           e.preventDefault();
           removeBlock(index, true);
         }
-      } else if (e.key === 'ArrowUp' && index === 0 && !ta.value.slice(0, ta.selectionStart).includes('\n')) {
+      } else if (e.key === 'ArrowUp' && atStart) {
         e.preventDefault();
-        titleEl.focus();
-      } else if (e.key === 'ArrowUp' && index > 0 && !ta.value.slice(0, ta.selectionStart).includes('\n')) {
+        if (index === 0) titleEl.focus(); else focusBlock(index - 1);
+      } else if (e.key === 'ArrowDown' && atEnd && index < note.blocks.length - 1) {
         e.preventDefault();
-        focusBlock(index - 1);
-      } else if (e.key === 'ArrowDown' && index < note.blocks.length - 1 && !ta.value.slice(ta.selectionEnd).includes('\n')) {
-        e.preventDefault();
-        focusBlock(index + 1);
+        focusBlock(index + 1, 'start');
       }
     });
-    row.append(ta);
+    row.append(ed);
 
     const del = document.createElement('button');
     del.className = 'block-del';
@@ -274,8 +317,71 @@ function renderBlocks() {
     blocksEl.appendChild(row);
   });
   renderProgress();
-  requestAnimationFrame(growAll);
 }
+
+// ---------- Mise en forme : gras, italique, souligné, alignement ----------
+
+const formatBar = $('#format-bar');
+let titleFocused = false;
+
+function applyStyle(cmd) {
+  if (note.pinned || titleFocused) return;
+  document.execCommand(cmd);
+  // execCommand déclenche "input" sur la zone : la sauvegarde suit toute seule.
+  updateFormatState();
+}
+
+function setAlign(value) {
+  if (note.pinned) return;
+  if (titleFocused) {
+    titleEl.style.textAlign = value;
+    save({ titleAlign: value });
+  } else {
+    const block = note.blocks[focusedIndex];
+    const ed = editorOf(focusedIndex);
+    if (!block || !ed) return;
+    block.align = value;
+    ed.style.textAlign = value;
+    saveBlocks();
+  }
+  updateFormatState();
+}
+
+function currentAlign() {
+  if (titleFocused) return GBRich.align(note.titleAlign);
+  return GBRich.align(note.blocks[focusedIndex]?.align);
+}
+
+function updateFormatState() {
+  const inEditor = !!document.activeElement?.classList?.contains('editor');
+  for (const b of formatBar.querySelectorAll('[data-cmd]')) {
+    b.disabled = !inEditor;
+    b.classList.toggle('active', inEditor && document.queryCommandState(b.dataset.cmd));
+  }
+  const align = currentAlign();
+  for (const b of formatBar.querySelectorAll('[data-align]')) b.classList.toggle('active', b.dataset.align === align);
+}
+
+for (const b of formatBar.querySelectorAll('button')) {
+  b.addEventListener('mousedown', (e) => e.preventDefault()); // garde la sélection
+  b.addEventListener('click', () => (b.dataset.cmd ? applyStyle(b.dataset.cmd) : setAlign(b.dataset.align)));
+}
+document.addEventListener('selectionchange', () => { if (!note?.pinned) updateFormatState(); });
+
+// La barre de mise en forme apparaît quand on écrit dans le post-it.
+document.addEventListener('focusin', (e) => {
+  titleFocused = e.target === titleEl;
+  if (e.target === titleEl || e.target.classList?.contains('editor')) {
+    document.body.classList.add('editing');
+    updateFormatState();
+  }
+});
+document.addEventListener('focusout', () => {
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (a !== titleEl && !a?.classList?.contains('editor')) document.body.classList.remove('editing');
+  }, 0);
+});
 
 // Clic dans le vide sous le contenu : on écrit à la suite.
 $('#content').addEventListener('mousedown', (e) => {
@@ -311,11 +417,10 @@ window.gbpost.onChanged((updated) => {
   if (!!updated.pinned !== !!note.pinned) applyPinned(!!updated.pinned);
   if ((updated.title || '') !== (note.title || '') && document.activeElement !== titleEl) {
     note.title = updated.title;
+    note.titleAlign = updated.titleAlign;
     renderTitle();
   }
 });
-
-window.addEventListener('resize', growAll);
 
 // Poignée de redimensionnement : on suit la souris et on demande la nouvelle
 // taille au processus principal (les bords de la fenêtre marchent aussi).
@@ -349,12 +454,11 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !paletteEl.hidden) closePalette();
 });
 
-// ---------- Démarrage ----------
-
 // ---------- Titre ----------
 
 function renderTitle() {
   titleEl.value = note.title || '';
+  titleEl.style.textAlign = GBRich.align(note.titleAlign);
   titleEl.classList.toggle('empty', !titleEl.value.trim());
 }
 
@@ -369,12 +473,14 @@ titleEl.addEventListener('keydown', (e) => {
   }
 });
 
+// ---------- Démarrage ----------
+
 async function init() {
   buildPalette();
   note = await window.gbpost.getNote();
   if (!note) return;
   if (!Array.isArray(note.blocks) || note.blocks.length === 0) {
-    note.blocks = [{ id: uid(), type: 'text', text: '' }];
+    note.blocks = [{ id: uid(), type: 'text', text: '', html: '' }];
   }
   applyColor(note.color || COLORS[0]);
   renderTitle();

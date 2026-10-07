@@ -27,6 +27,16 @@
     </label>
   </div>
 
+  <div id="format-bar" class="format-bar">
+    <button data-cmd="bold" title="Gras (Ctrl+B)"><b>G</b></button>
+    <button data-cmd="italic" title="Italique (Ctrl+I)"><i>I</i></button>
+    <button data-cmd="underline" title="Souligné (Ctrl+U)"><u>S</u></button>
+    <span class="sep"></span>
+    <button data-align="left" title="Aligner à gauche"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="1" y="14" width="9" height="2" rx="1"/></svg></button>
+    <button data-align="center" title="Centrer"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="3.5" y="14" width="9" height="2" rx="1"/></svg></button>
+    <button data-align="right" title="Aligner à droite"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="6" y="14" width="9" height="2" rx="1"/></svg></button>
+  </div>
+
   <main id="content" class="content">
     <input id="title" class="title" type="text" maxlength="200" placeholder="Titre" spellcheck="true">
     <div id="blocks" class="blocks"></div>
@@ -39,6 +49,7 @@
   <div id="grip" class="grip" title="Glisser pour redimensionner"></div>
   <footer class="status"><span id="progress"></span><span id="saved">Enregistré ✓</span></footer>
 
+  <script src="rich.js"></script>
   <script src="note.js"></script>
 </body>
 </html>

@@ -84,18 +84,28 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePalet
 function previewOf(note) {
   const box = el('div', { className: 'preview' });
   const blocks = (note.blocks || []).filter((b) => b.text?.trim());
-  if (note.title?.trim()) box.append(el('h3', { className: 'pv-title', textContent: note.title }));
+  if (note.title?.trim()) {
+    const h = el('h3', { className: 'pv-title', textContent: note.title });
+    h.style.textAlign = GBRich.align(note.titleAlign);
+    box.append(h);
+  }
   if (!blocks.length && !note.title?.trim()) {
     box.append(el('p', { className: 'placeholder', textContent: 'Post-it vide' }));
     return box;
   }
   for (const b of blocks.slice(0, PREVIEW_BLOCKS)) {
+    // Texte mis en forme (gras, italique, souligné), nettoyé par GBRich.
+    const content = el('span', { className: 'pv-content' });
+    content.innerHTML = GBRich.blockHtml(b);
+    content.style.textAlign = GBRich.align(b.align);
     if (b.type === 'check') {
       box.append(el('div', { className: `pv-check${b.done ? ' done' : ''}` },
         el('span', { className: 'box', textContent: b.done ? '☑' : '☐' }),
-        el('span', { textContent: b.text })));
+        content));
     } else {
-      box.append(el('p', { className: 'pv-text', textContent: b.text }));
+      const p = el('p', { className: 'pv-text' }, content);
+      p.style.textAlign = GBRich.align(b.align);
+      box.append(p);
     }
   }
   if (blocks.length > PREVIEW_BLOCKS) box.append(el('div', { className: 'more', textContent: `+ ${blocks.length - PREVIEW_BLOCKS} autre(s)…` }));

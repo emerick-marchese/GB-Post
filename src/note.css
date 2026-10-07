@@ -76,7 +76,7 @@ body.pinned .bar .edit { display: block; }
 body.pinned:hover .bar .edit { opacity: 1; }
 body.pinned .bar .edit:hover { background: #fff; }
 body.pinned .content { padding-top: 2px; user-select: none; }
-body.pinned textarea { cursor: default; }
+body.pinned .editor { cursor: default; }
 
 /* Palette de couleurs */
 .palette {
@@ -115,20 +115,48 @@ body.pinned textarea { cursor: default; }
 .content::-webkit-scrollbar { width: 8px; }
 .content::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .2); border-radius: 4px; }
 
-textarea {
-  font: inherit;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  outline: none;
-  resize: none;
-  width: 100%;
+.editor {
+  flex: 1;
+  min-width: 0;
   min-height: 1.5em;
   padding: .05em 0;
-  overflow: hidden;
-  display: block;
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
 }
-textarea::placeholder { color: var(--muted); }
+.editor:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
+
+/* Barre de mise en forme : visible seulement quand on écrit dans le post-it. */
+.format-bar {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 6px;
+  background: color-mix(in srgb, var(--note) 90%, #000);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+body.editing:not(.pinned) .format-bar { display: flex; }
+.format-bar button {
+  min-width: 26px;
+  height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: .75;
+}
+.format-bar button svg { fill: currentColor; }
+.format-bar button:hover { background: rgba(0, 0, 0, .12); opacity: 1; }
+.format-bar button.active { background: rgba(0, 0, 0, .2); opacity: 1; }
+.format-bar button:disabled { opacity: .3; cursor: default; background: none; }
+.format-bar .sep { width: 1px; height: 16px; background: var(--line); margin: 0 4px; }
 
 /* Titre du post-it */
 .title {
@@ -200,7 +228,7 @@ body.pinned .block:hover { background: none; }
   border-width: 0 .12em .12em 0;
   transform: rotate(45deg);
 }
-.block.done textarea { text-decoration: line-through; color: var(--muted); }
+.block.done .editor { text-decoration: line-through; color: var(--muted); }
 .block-del {
   border: 0;
   background: none;

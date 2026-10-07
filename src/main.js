@@ -378,6 +378,7 @@ ipcMain.handle('note:update', (event, patch) => {
     if (key in patch) allowed[key] = patch[key];
   }
   if (typeof patch.title === 'string') allowed.title = patch.title.slice(0, 200);
+  if (['left', 'center', 'right'].includes(patch.titleAlign)) allowed.titleAlign = patch.titleAlign;
   const note = store.updateNote(id, allowed);
   if (allowed.color) windows.get(id)?.setBackgroundColor(allowed.color);
   notesChanged();

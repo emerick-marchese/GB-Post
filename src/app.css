@@ -328,3 +328,6 @@ input[type="search"] {
 .setting .ghost:disabled { opacity: .45; cursor: default; }
 
 .preview .pv-title { margin: 0 0 6px; font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+
+.pv-check .pv-content { flex: 1; min-width: 0; }
+.pv-check.done .pv-content { text-decoration: line-through; opacity: .6; }
